@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 import { cartLineSchema, MAX_CART_LINES, MAX_LINE_QTY, type CartLine } from "./schemas";
 
 const KEY = "saka.cart";
+const ACTIVE_KEY = "saka.activeOrder";
 const listeners = new Set<() => void>();
 let lines: CartLine[] | null = null;
 
@@ -44,10 +45,8 @@ function write(next: CartLine[]) {
 
 function subscribe(notify: () => void) {
   const onStorage = (event: StorageEvent) => {
-    if (event.key === KEY || event.key === null) {
-      lines = null;
-      notify();
-    }
+    if (event.key === KEY || event.key === null) lines = null;
+    if (event.key === KEY || event.key === ACTIVE_KEY || event.key === null) notify();
   };
   listeners.add(notify);
   window.addEventListener("storage", onStorage);
@@ -75,6 +74,31 @@ export function useCart() {
       return true;
     },
     setQty: (productId: string, sizeMl: number, qty: number) => write(setLineQty(snapshot(), productId, sizeMl, qty)),
-    clear: () => write([]),
   };
+}
+
+export const clearCart = () => write([]);
+
+export function setActiveOrder(id: string | null) {
+  try {
+    if (id) localStorage.setItem(ACTIVE_KEY, id);
+    else localStorage.removeItem(ACTIVE_KEY);
+  } catch {
+    // Storage can be blocked. The resume link is then unavailable, the URL still works.
+  }
+  listeners.forEach((notify) => notify());
+}
+
+export function useActiveOrder() {
+  return useSyncExternalStore(
+    subscribe,
+    () => {
+      try {
+        return localStorage.getItem(ACTIVE_KEY);
+      } catch {
+        return null;
+      }
+    },
+    () => null,
+  );
 }

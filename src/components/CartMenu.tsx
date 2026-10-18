@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { useCart } from "@/lib/cart";
+import { useActiveOrder, useCart } from "@/lib/cart";
 import { computeTotals, formatRiel, formatUsd, priceOf } from "@/lib/pricing";
 import type { CartCatalogItem } from "@/lib/sanity";
 import { CartIcon, CloseIcon, MinusIcon, PlusIcon } from "./Icons";
@@ -10,6 +10,7 @@ import { Modal } from "./Modal";
 
 export function CartMenu({ catalog }: { catalog: CartCatalogItem[] }) {
   const { lines, setQty } = useCart();
+  const activeOrder = useActiveOrder();
   const [open, setOpen] = useState(false);
 
   const rows = (lines ?? []).map((line) => {
@@ -51,6 +52,13 @@ export function CartMenu({ catalog }: { catalog: CartCatalogItem[] }) {
             </button>
           </div>
 
+          {activeOrder && (
+            <Link href={`/checkout/${activeOrder}`} onClick={() => setOpen(false)} className="mt-6 flex min-h-11 items-center justify-between border border-border bg-surface px-4 py-3">
+              <span>Continue your payment</span>
+              <span className="eyebrow">Open</span>
+            </Link>
+          )}
+
           {lines === null ? (
             <div className="mt-8 space-y-4" aria-hidden="true">
               <div className="skeleton h-14" />
@@ -85,6 +93,7 @@ export function CartMenu({ catalog }: { catalog: CartCatalogItem[] }) {
                 <span className="eyebrow">Subtotal</span>
                 <span>{formatUsd(subtotalUsd)} <span className="small text-muted">({formatRiel(subtotalUsd)})</span></span>
               </div>
+              <Link href="/checkout" onClick={() => setOpen(false)} className="btn btn-primary mt-8 w-full">Checkout</Link>
             </>
           )}
         </div>

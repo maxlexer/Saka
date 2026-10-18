@@ -19,3 +19,21 @@ export function ProductGridSkeleton({ count, className = "" }: { count: number; 
     </div>
   );
 }
+
+export function CheckoutSkeleton() {
+  return (
+    <div role="status" aria-label="Loading checkout" className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]">
+      <div className="space-y-6">
+        {Array.from({ length: 3 }, (_, i) => (
+          <div key={i}>
+            <div className="skeleton mb-2 h-[18px] w-32" />
+            <div className="skeleton h-11" />
+          </div>
+        ))}
+        <div className="skeleton h-5 w-3/4" />
+        <div className="skeleton h-11 w-full lg:w-48" />
+      </div>
+      <div className="skeleton h-64" />
+    </div>
+  );
+}

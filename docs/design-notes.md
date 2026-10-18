@@ -59,3 +59,24 @@ Rejected:
 - White #FFFFFF in the suggested color strategy. The brief forbids it.
 - "Benefit bullets" and a features row. They would be filler sections.
 - Sticky hero call to action. The header already stays in view, and the hero must stay uncluttered.
+
+## Pass 2 checkout form and payment screen
+
+Queries: inline validation error near field, checkout form submit loading, countdown timer screen reader live region. The first two returned matching form guidance. The countdown query returned only generic screen reader advice, so no verified match was found for the countdown and it follows the brief.
+
+Accepted:
+- Each invalid field shows its error directly below, with an icon and text, linked by aria-describedby. Never color alone.
+- After a failed submit, focus moves to the first invalid field. Once errors are showing, they re-check as the customer types, so a fixed field clears at once.
+- The submit button reads "Preparing your code" and sets aria-busy while the order is created.
+- Labels are always visible above fields. The map link placeholder is an example, not the label.
+
+Rejected:
+- A separate error summary box at the top. With three fields, focus on the first invalid field does the same job with less clutter.
+- Validation on every blur. Errors appear only after the first submit, so a calm form does not scold a half finished entry.
+- A live region on the countdown. Announcing every second would be noise. Only the status line ("Waiting for payment") is aria-live="polite".
+
+Brief wins:
+- Pickup or delivery is a two segment outlined control, the selected segment filled #171A12 with cream text, 2px radius.
+- The summary panel is a flat surface tile with a 1px border, no shadow.
+- The QR is #171A12 on #FAF6EE inside a bordered cream tile, in both themes, so it always scans.
+- The paid popup uses the single permitted soft shadow, and it opens only after payment, never on first load.

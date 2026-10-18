@@ -17,3 +17,21 @@ test("dark scheme keeps the same structure and passes axe", async ({ browser }) 
   expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
   await context.close();
 });
+
+test("axe finds no serious issues with a card expanded", async ({ page }) => {
+  await page.goto("/products");
+  await page.locator("article").nth(0).getByRole("button").first().click();
+  await expect(page.getByRole("region", { name: "Jasmine Rain details" })).toBeVisible();
+  await page.waitForTimeout(500); // let the 400ms expand tween finish before measuring contrast
+  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+});
+
+test("axe finds no serious issues with the cart open", async ({ page }) => {
+  await page.goto("/products");
+  await page.getByRole("button", { name: /Open cart/ }).click();
+  await expect(page.getByRole("dialog", { name: "Cart" })).toBeVisible();
+  await page.waitForTimeout(500); // let the 300ms drawer tween finish before measuring contrast
+  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
+  expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+});

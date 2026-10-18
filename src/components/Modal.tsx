@@ -47,7 +47,7 @@ export function Modal({ open, onClose, label, from = "fade", className = "", chi
         if (!open && dialog.open) dialog.close();
       });
     },
-    { dependencies: [open, from] },
+    { dependencies: [open, from], revertOnUpdate: true },
   );
 
   return (

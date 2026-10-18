@@ -22,10 +22,11 @@ const SAMPLES = [
 
 const slugify = (s) => s.toLowerCase().replace(/\s+/g, "-");
 
+// createIfNotExists keeps any edits staff already made. Delete a document in Studio to reseed it.
 for (const [i, s] of SAMPLES.entries()) {
   const png = await sharp(Buffer.from(bottleSvg({ width: 1200, height: 1200, fill: FILLS[i % 3] }))).png().toBuffer();
   const asset = await client.assets.upload("image", png, { filename: `${slugify(s.name)}.png` });
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: `product-${slugify(s.name)}`,
     _type: "product",
     name: s.name,
@@ -42,7 +43,7 @@ for (const [i, s] of SAMPLES.entries()) {
   console.log(`seeded ${s.name}`);
 }
 
-await client.createOrReplace({
+await client.createIfNotExists({
   _id: "siteSettings",
   _type: "siteSettings",
   storeName: "SAKA Parfum",

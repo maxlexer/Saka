@@ -9,7 +9,7 @@ export default async function ProductsPage() {
   const products = await getCatalog();
   return (
     <section aria-labelledby="products-title" className="section">
-      <div className="container text-center">
+      <div className="wrap text-center">
         <p className="eyebrow">Products</p>
         <h1 id="products-title" className="h2 mt-3">Everything on our shelves</h1>
         {products.length === 0 ? (

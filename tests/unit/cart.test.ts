@@ -20,6 +20,10 @@ describe("addLine", () => {
     const full = Array.from({ length: 20 }, (_, i) => line(`p${i}`, 10, 1));
     expect(addLine(full, line("extra", 10, 1))).toHaveLength(20);
   });
+  it("returns the same array when the cart is full, so callers can detect it", () => {
+    const full = Array.from({ length: 20 }, (_, i) => line(`p${i}`, 10, 1));
+    expect(addLine(full, line("extra", 10, 1))).toBe(full);
+  });
 });
 
 describe("setLineQty", () => {

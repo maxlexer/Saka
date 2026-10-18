@@ -4,7 +4,7 @@ import { ArrowIcon } from "./Icons";
 export function VisitUs({ settings }: { settings: SiteSettings }) {
   return (
     <section id="visit" aria-labelledby="visit-title" className="section">
-      <div className="container text-center">
+      <div className="wrap text-center">
         <p className="eyebrow">Visit us</p>
         <h2 id="visit-title" className="h2 mt-3">Visit the shop</h2>
         <address className="mx-auto mt-6 max-w-[62ch] whitespace-pre-line not-italic">{settings.address}</address>

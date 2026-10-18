@@ -5,7 +5,7 @@ import type { SiteSettings } from "@/lib/sanity";
 export function Footer({ settings }: { settings: SiteSettings }) {
   return (
     <footer className="border-t border-border bg-surface">
-      <div className="container flex flex-col items-center gap-6 py-14 text-center">
+      <div className="wrap flex flex-col items-center gap-6 py-14 text-center">
         <Logo className="h-14 w-auto" />
         <p className="small text-muted">Fragrance from Cambodia.</p>
         <p className="small max-w-[62ch] text-muted">

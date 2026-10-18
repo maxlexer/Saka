@@ -9,7 +9,7 @@ export default function Loading() {
         <div className="skeleton h-[40svh] w-[30svh] lg:h-[50svh] lg:w-[37.5svh]" />
         <div className="skeleton h-11 w-48" />
       </div>
-      <section className="section"><div className="container"><ProductGridSkeleton count={6} className="lg:[&>div:nth-child(n+4)]:hidden" /></div></section>
+      <section className="section"><div className="wrap"><ProductGridSkeleton count={6} className="lg:[&>div:nth-child(n+4)]:hidden" /></div></section>
     </>
   );
 }

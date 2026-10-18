@@ -30,7 +30,7 @@ export function MobileMenu() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className="font-display text-[22px] font-medium uppercase tracking-[0.1em]"
+                className="tap font-display text-[22px] font-medium uppercase tracking-[0.1em]"
               >
                 {item.label}
               </Link>

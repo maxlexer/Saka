@@ -6,6 +6,8 @@ import { sizeMlSchema } from "./schemas";
 const list = <T extends z.ZodTypeAny>(item: T) =>
   z.array(item).nullish().transform((v) => v ?? []);
 
+const webUrl = z.url({ protocol: /^https?$/ });
+
 const image = z.object({ url: z.string().min(1), alt: z.string().min(1), lqip: z.string().nullish() });
 
 export const productSchema = z.object({
@@ -34,8 +36,8 @@ export const siteSettingsSchema = z.object({
   address: z.string().min(1),
   hours: list(z.object({ days: z.string(), open: z.string(), close: z.string() })),
   phone: z.string().nullish().transform((v) => v ?? ""),
-  mapUrl: z.string().url(),
-  socialLinks: list(z.object({ label: z.string(), url: z.string().url() })),
+  mapUrl: webUrl,
+  socialLinks: list(z.object({ label: z.string(), url: webUrl })),
   stockUpdatedAt: z.string().nullish().transform((v) => v ?? null),
 });
 
@@ -65,7 +67,9 @@ export function parseProducts(raw: unknown[]): Product[] {
 
 export function parseSettings(raw: unknown): SiteSettings {
   const parsed = siteSettingsSchema.safeParse(raw);
-  return parsed.success ? parsed.data : FALLBACK_SETTINGS;
+  if (parsed.success) return parsed.data;
+  console.warn(`Using fallback site settings: ${parsed.error.issues[0]?.message}`);
+  return FALLBACK_SETTINGS;
 }
 
 export const toCartCatalog = (products: Product[]): CartCatalogItem[] =>

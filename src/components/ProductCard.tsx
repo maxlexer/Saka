@@ -6,6 +6,7 @@ import { useCart } from "@/lib/cart";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { formatUsd, rielNumber } from "@/lib/pricing";
 import type { Product } from "@/lib/sanity";
+import { MAX_LINE_QTY } from "@/lib/schemas";
 import { LABELS } from "@/lib/taxonomy";
 import { AlertIcon, CheckIcon, MinusIcon, PlusIcon } from "./Icons";
 
@@ -19,14 +20,14 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
   const [broken, setBroken] = useState(false);
   const [sizeMl, setSizeMl] = useState(sizes[0].sizeMl);
   const [qty, setQty] = useState(1);
-  const [added, setAdded] = useState(false);
+  const [status, setStatus] = useState<"added" | "full" | null>(null);
   const { add } = useCart();
 
   useEffect(() => {
-    if (!added) return;
-    const timer = setTimeout(() => setAdded(false), 1600);
+    if (status !== "added") return;
+    const timer = setTimeout(() => setStatus(null), 1600);
     return () => clearTimeout(timer);
-  }, [added]);
+  }, [status]);
 
   useGSAP(
     () => {
@@ -45,7 +46,7 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
         panel.hidden = !open;
       });
     },
-    { dependencies: [open] },
+    { dependencies: [open], revertOnUpdate: true },
   );
 
   const notes = [
@@ -164,21 +165,22 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
             <div className="flex items-center">
               <button type="button" aria-label="Fewer" onClick={() => setQty(Math.max(1, qty - 1))} className="flex size-11 items-center justify-center text-secondary"><MinusIcon /></button>
               <span aria-live="polite" className="w-6 text-center">{qty}</span>
-              <button type="button" aria-label="More" onClick={() => setQty(Math.min(10, qty + 1))} className="flex size-11 items-center justify-center text-secondary"><PlusIcon /></button>
+              <button type="button" aria-label="More" onClick={() => setQty(Math.min(MAX_LINE_QTY, qty + 1))} className="flex size-11 items-center justify-center text-secondary"><PlusIcon /></button>
             </div>
           </div>
 
           <button
             type="button"
             disabled={!available}
-            onClick={() => {
-              add({ productId: id, sizeMl, qty });
-              setAdded(true);
-            }}
+            onClick={() => setStatus(add({ productId: id, sizeMl, qty }) ? "added" : "full")}
             className="btn btn-primary w-full"
           >
-            {added ? "Added to cart" : "Add to cart"}
+            {status === "added" ? "Added to cart" : "Add to cart"}
           </button>
+          <p role="status" className={status === "full" ? "small text-error" : "sr-only"}>
+            {status === "added" && "Added to cart."}
+            {status === "full" && "Your cart is full. Remove an item to add more."}
+          </p>
           {!available && <p className="small text-error">This scent is out of stock. Visit us or check back soon.</p>}
         </div>
       </div>

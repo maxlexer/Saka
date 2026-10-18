@@ -1,5 +1,4 @@
 import { useSyncExternalStore } from "react";
-import { z } from "zod";
 import { cartLineSchema, MAX_CART_LINES, MAX_LINE_QTY, type CartLine } from "./schemas";
 
 const KEY = "saka.cart";
@@ -22,8 +21,12 @@ export function setLineQty(cart: CartLine[], productId: string, sizeMl: number, 
 
 function readStorage(): CartLine[] {
   try {
-    const parsed = z.array(cartLineSchema).safeParse(JSON.parse(localStorage.getItem(KEY) ?? "[]"));
-    return parsed.success ? parsed.data : [];
+    const raw: unknown = JSON.parse(localStorage.getItem(KEY) ?? "[]");
+    if (!Array.isArray(raw)) return [];
+    return raw.flatMap((item) => {
+      const line = cartLineSchema.safeParse(item);
+      return line.success ? [line.data] : [];
+    }).slice(0, MAX_CART_LINES);
   } catch {
     return [];
   }
@@ -63,7 +66,14 @@ export function useCart() {
   const current = useSyncExternalStore(subscribe, snapshot, () => null);
   return {
     lines: current,
-    add: (line: CartLine) => write(addLine(snapshot(), line)),
+    /** Returns false when the cart is full and the line was not added. */
+    add: (line: CartLine) => {
+      const prev = snapshot();
+      const next = addLine(prev, line);
+      if (next === prev) return false;
+      write(next);
+      return true;
+    },
     setQty: (productId: string, sizeMl: number, qty: number) => write(setLineQty(snapshot(), productId, sizeMl, qty)),
     clear: () => write([]),
   };

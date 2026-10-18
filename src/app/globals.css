@@ -79,8 +79,8 @@ button:not(:disabled) { cursor: pointer; }
 }
 
 @layer components {
-  .container { margin-inline: auto; max-width: 1200px; padding-inline: 20px; }
-  @media (min-width: 1024px) { .container { padding-inline: 32px; } }
+  .wrap { margin-inline: auto; max-width: 1200px; padding-inline: 20px; }
+  @media (min-width: 1024px) { .wrap { padding-inline: 32px; } }
 
   .section { padding-block: 56px; }
   @media (min-width: 1024px) { .section { padding-block: 96px; } }
@@ -117,6 +117,9 @@ button:not(:disabled) { cursor: pointer; }
     transition: transform 300ms ease-out;
   }
   .link:hover::after, .link:focus-visible::after, .link[aria-current="page"]::after { transform: scaleX(1); }
+
+  .tap { position: relative; }
+  .tap::before { content: ""; position: absolute; inset: -12px -8px; }
 
   .skeleton { background: var(--surface); }
   .skip-link {

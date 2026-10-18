@@ -50,3 +50,27 @@ test("unknown routes show the branded 404", async ({ page }) => {
   expect(response?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1 })).toContainText("not on our shelf");
 });
+
+test("content stays within 1200px on wide screens", async ({ page }) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await page.goto("/products");
+  const width = await page.locator("main .wrap").first().evaluate((el) => el.getBoundingClientRect().width);
+  expect(width).toBeLessThanOrEqual(1200);
+});
+
+test("cart drawer changes quantity, removes lines and returns focus on Escape", async ({ page }) => {
+  await page.goto("/products");
+  await page.locator("article").nth(0).getByRole("button").first().click();
+  await page.getByRole("button", { name: "Add to cart" }).first().click();
+  const opener = page.getByRole("button", { name: /Open cart/ });
+  await opener.click();
+  const dialog = page.getByRole("dialog", { name: "Cart" });
+  await dialog.getByRole("button", { name: "Add one Jasmine Rain, 10ml" }).click();
+  await expect(dialog).toContainText("$24.00");
+  await dialog.getByRole("button", { name: "Remove one Jasmine Rain, 10ml" }).click();
+  await dialog.getByRole("button", { name: "Remove one Jasmine Rain, 10ml" }).click();
+  await expect(dialog).toContainText("Your cart is empty");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(opener).toBeFocused();
+});

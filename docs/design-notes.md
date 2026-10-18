@@ -46,3 +46,16 @@ Brief wins:
 - Card is an outlined 2px-radius surface with a 1px border that turns #8C7964 on hover, not a shadowed tile.
 - Size selector is three outlined segments, the selected one filled with the primary color.
 - Out of stock is text plus an icon in the error color, never color alone, and the add button is disabled.
+
+## Pass 1 hero, home, Visit us and 404
+
+Queries: single product hero (landing patterns), 404 and error states.
+
+Accepted:
+- Minimal single column hero: headline, one short line, one centered call to action, lots of space.
+- Call to action label contrast above 4.5:1 (cream on #171A12).
+
+Rejected:
+- White #FFFFFF in the suggested color strategy. The brief forbids it.
+- "Benefit bullets" and a features row. They would be filler sections.
+- Sticky hero call to action. The header already stays in view, and the hero must stay uncluttered.

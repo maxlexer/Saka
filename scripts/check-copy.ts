@@ -9,6 +9,7 @@ const PALETTE = new Set([
 const ROOTS = ["src", "scripts", "sanity", "tests", "supabase", "README.md"];
 const EXTS = new Set([".ts", ".tsx", ".css", ".mjs", ".sql", ".md"]);
 const SKIP = new Set(["tests/unit/check-copy.test.ts"]);
+const SKIP_DIRS = new Set(["dist", ".sanity", "node_modules"]);
 
 export function findViolations(file: string, text: string): string[] {
   const out: string[] = [];
@@ -28,7 +29,7 @@ function* walk(path: string): Generator<string> {
   let stat;
   try { stat = statSync(path); } catch { return; }
   if (stat.isDirectory()) {
-    for (const name of readdirSync(path)) yield* walk(join(path, name));
+    for (const name of readdirSync(path)) if (!SKIP_DIRS.has(name)) yield* walk(join(path, name));
   } else if (EXTS.has(extname(path))) {
     yield path;
   }

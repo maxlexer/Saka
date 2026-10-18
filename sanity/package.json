@@ -1,0 +1,9 @@
+{
+  "name": "saka-studio",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "sanity": "^6.19.0",
+    "styled-components": "^6.6.0"
+  }
+}

@@ -138,7 +138,7 @@ alter table orders enable row level security;
 - The settle step is a Postgres function so the pending to paid move is atomic:
 
 ```sql
-create function settle_order(p_md5 text) returns setof orders language sql as $$
+create function settle_order(p_md5 text) returns setof orders language sql set search_path = public as $$
   update orders
      set status = 'paid', paid_at = now(), order_number = nextval('order_number_seq'), ip_hash = null
    where khqr_md5 = p_md5 and status = 'pending'
@@ -146,7 +146,7 @@ create function settle_order(p_md5 text) returns setof orders language sql as $$
 $$;
 ```
 
-It returns a row only for the single caller that wins the transition. It returns `setof orders` so that losing the race is an empty result over PostgREST, not a row of nulls. Execute rights are revoked from `anon` and `authenticated`.
+It returns a row only for the single caller that wins the transition. It returns `setof orders` so that losing the race is an empty result over PostgREST, not a row of nulls. Execute rights are revoked from `anon` and `authenticated`. The fixed `search_path` satisfies the Supabase security advisor.
 
 ### 5.5 Pricing
 
@@ -213,7 +213,7 @@ One function, `settleOrder(md5)`, used by the status route, the webhook and the 
 4. The winner posts the admin message (section 7.1). On success, set `admin_notified_at`.
 5. If the post fails, `admin_notified_at` stays null. Any later status poll or the daily cron retries it. A rare duplicate message is accepted over a lost one.
 
-The status route runs `settleOrder` only when the order is pending, not expired, and `last_checked_at` is older than 5 seconds (khqr.dev caches repeat checks for 5 seconds anyway). This keeps khqr.dev traffic low however many viewers poll. The status route and the cron also check pending orders after the QR has expired, within 24 hours of creation, so a payment made at minute 9 and viewed at minute 11 is still settled. The amount check still protects the shop.
+The status route runs `settleOrder` only when the order is pending and `last_checked_at` is older than 5 seconds (khqr.dev caches repeat checks for 5 seconds anyway). This keeps khqr.dev traffic low however many viewers poll. The status route and the cron also check pending orders after the QR has expired, within 24 hours of creation, so a payment made at minute 9 and viewed at minute 11 is still settled. The amount check still protects the shop.
 
 ### 6.6 Webhook trigger (`/api/khqr/webhook`)
 

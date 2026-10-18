@@ -37,3 +37,19 @@ export function CheckoutSkeleton() {
     </div>
   );
 }
+
+export function PaymentSkeleton() {
+  return (
+    <section className="section">
+      <div className="wrap max-w-[520px] text-center" role="status" aria-label="Loading your payment">
+        <div className="skeleton mx-auto h-[18px] w-28" />
+        <div className="skeleton mx-auto mt-3 h-8 w-40 lg:h-10" />
+        <div className="skeleton mx-auto mt-1 h-5 w-24" />
+        <div className="skeleton mx-auto mt-8 aspect-square w-full max-w-[320px]" />
+        <div className="skeleton mx-auto mt-6 h-1 w-full max-w-[320px]" />
+        <div className="skeleton mx-auto mt-2 h-5 w-36" />
+        <div className="skeleton mx-auto mt-4 h-6 w-44" />
+      </div>
+    </section>
+  );
+}

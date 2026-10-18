@@ -70,7 +70,7 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
         aria-expanded={open}
         aria-controls={panelId}
         onClick={onToggle}
-        className="relative block w-full text-center"
+        className="block w-full text-center"
       >
         <span className="relative block aspect-square overflow-hidden bg-bg">
           {broken ? (
@@ -101,13 +101,20 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
           )}
         </span>
         <span className="h3 mt-5 block">{name}</span>
-        <span className="small mt-2 block">{sizes.map((s) => `${s.sizeMl}ml ${formatUsd(s.priceUsd, true)}`).join(" · ")}</span>
+        <span className="small mt-2 block">
+          {sizes.map((s, i) => (
+            <Fragment key={s.sizeMl}>
+              {i > 0 && " · "}
+              <span className="whitespace-nowrap">{s.sizeMl}ml {formatUsd(s.priceUsd, true)}</span>
+            </Fragment>
+          ))}
+        </span>
         <span className="small block text-muted">{sizes.map((s) => rielNumber(s.priceUsd)).join(" · ")} KHR</span>
         <span className={`small mt-2 inline-flex items-center gap-1 ${available ? "text-success" : "text-error"}`}>
           {available ? <CheckIcon width={18} height={18} /> : <AlertIcon width={18} height={18} />}
           {available ? "Available" : "Out of stock"}
         </span>
-        <span className="absolute bottom-0 right-0 text-secondary">{open ? <MinusIcon /> : <PlusIcon />}</span>
+        <span className="mt-2 flex justify-center text-secondary">{open ? <MinusIcon /> : <PlusIcon />}</span>
       </button>
 
       <div id={panelId} ref={panelRef} role="region" aria-label={`${name} details`} hidden className="overflow-hidden">

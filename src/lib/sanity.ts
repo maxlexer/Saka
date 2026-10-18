@@ -75,7 +75,7 @@ export function parseSettings(raw: unknown): SiteSettings {
 export const toCartCatalog = (products: Product[]): CartCatalogItem[] =>
   products.map(({ id, name, sizes, available }) => ({ id, name, sizes, available }));
 
-const client = createClient({
+const config = {
   projectId: process.env.SANITY_PROJECT_ID ?? "missing",
   dataset: process.env.SANITY_DATASET ?? "production",
   apiVersion: "2025-01-01",
@@ -83,7 +83,9 @@ const client = createClient({
   ...(process.env.SANITY_API_HOST
     ? { apiHost: process.env.SANITY_API_HOST, useProjectHostname: false, useCdn: false }
     : {}),
-});
+};
+const client = createClient(config);
+const liveClient = createClient({ ...config, useCdn: false });
 
 const PRODUCT_FIELDS = `
   "id": _id, name, "slug": slug.current, description, notesTop, notesHeart, notesBase,
@@ -107,4 +109,10 @@ export async function getSettings(): Promise<SiteSettings> {
     console.warn("Could not load site settings", error);
     return FALLBACK_SETTINGS;
   }
+}
+
+/** Always live, never cached. Checkout uses this so a stale page cannot oversell. */
+export async function getLiveProducts(ids: string[]): Promise<Product[]> {
+  const query = `*[_type == "product" && _id in $ids && isActive != false]{${PRODUCT_FIELDS}}`;
+  return parseProducts(await liveClient.fetch<unknown[]>(query, { ids }, { cache: "no-store" }));
 }

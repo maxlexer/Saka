@@ -28,6 +28,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   process.env.TELEGRAM_ADMIN_CHAT_ID = "-100";
   vi.mocked(db.countRecentByIp).mockResolvedValue(0);
+  vi.mocked(db.claimNotify).mockResolvedValue(true);
 });
 
 describe("createOrder", () => {
@@ -85,7 +86,7 @@ describe("settleOrder", () => {
     expect(await settleOrder(md5)).toBe(true);
     expect(db.settleByMd5).toHaveBeenCalledWith(md5);
     expect(sendMessage).toHaveBeenCalledWith("-100", expect.stringContaining("New order SK-1042"));
-    expect(db.markNotified).toHaveBeenCalledWith(paidRow().id);
+    expect(db.claimNotify).toHaveBeenCalledWith(paidRow().id);
   });
   it("does nothing when khqr.dev says unpaid", async () => {
     vi.mocked(checkPaid).mockResolvedValue({ paid: false });
@@ -117,16 +118,21 @@ describe("settleOrder", () => {
     expect(await settleOrder(md5)).toBe(false);
     expect(sendMessage).not.toHaveBeenCalled();
   });
-  it("leaves admin_notified_at empty when Telegram fails, so a retry can happen", async () => {
+  it("releases the admin claim when Telegram fails, so a retry can happen", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(sendMessage).mockRejectedValue(new Error("down"));
     expect(await settleOrder(md5)).toBe(true);
-    expect(db.markNotified).not.toHaveBeenCalled();
+    expect(db.releaseNotify).toHaveBeenCalledWith(paidRow().id);
     error.mockRestore();
   });
 });
 
 describe("notifyAdmin", () => {
+  it("sends nothing when another caller already claimed the message", async () => {
+    vi.mocked(db.claimNotify).mockResolvedValue(false);
+    await notifyAdmin(paidRow());
+    expect(sendMessage).not.toHaveBeenCalled();
+  });
   it("never throws", async () => {
     const error = vi.spyOn(console, "error").mockImplementation(() => {});
     vi.mocked(sendMessage).mockRejectedValue(new Error("down"));
@@ -199,12 +205,22 @@ describe("handleStart", () => {
 describe("runDaily", () => {
   it("pings, retries unsent messages, settles stale orders and cleans up", async () => {
     vi.mocked(db.unnotifiedPaid).mockResolvedValue([paidRow()]);
-    vi.mocked(db.stalePending).mockResolvedValue([pendingRow()]);
+    vi.mocked(db.stalePending).mockResolvedValue([pendingRow({ last_checked_at: new Date(Date.now() - 3600_000).toISOString() })]);
     vi.mocked(db.getOrderByMd5).mockResolvedValue(pendingRow());
     vi.mocked(checkPaid).mockResolvedValue({ paid: true, amount: 24, currency: "USD" });
     vi.mocked(db.settleByMd5).mockResolvedValue(paidRow());
     vi.mocked(db.cleanup).mockResolvedValue({ deleted: 3, scrubbed: 1 });
     expect(await runDaily()).toEqual({ retried: 1, settled: 1, deleted: 3, scrubbed: 1 });
     expect(db.ping).toHaveBeenCalled();
+  });
+  it("keeps checking the other orders when one check fails", async () => {
+    const md5s = ["a".repeat(32), "b".repeat(32)];
+    vi.mocked(db.unnotifiedPaid).mockResolvedValue([]);
+    vi.mocked(db.stalePending).mockResolvedValue(md5s.map((khqr_md5) => pendingRow({ khqr_md5 })));
+    vi.mocked(db.getOrderByMd5).mockResolvedValue(pendingRow());
+    vi.mocked(checkPaid).mockRejectedValueOnce(new Error("rate limited")).mockResolvedValueOnce({ paid: true, amount: 24, currency: "USD" });
+    vi.mocked(db.settleByMd5).mockResolvedValue(paidRow());
+    vi.mocked(db.cleanup).mockResolvedValue({ deleted: 0, scrubbed: 0 });
+    expect(await runDaily()).toMatchObject({ settled: 1 });
   });
 });

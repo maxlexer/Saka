@@ -43,6 +43,7 @@ export async function createOrder({ lines, details }: OrderInput, ip: string) {
   });
 
   const { subtotalUsd, deliveryFeeUsd, totalUsd } = computeTotals(items, details.fulfilment);
+  const expiresAt = new Date(Date.now() + QR_LIFETIME_MS).toISOString();
   const qr = await generateQr(totalUsd);
   const order = await db.insertOrder({
     claim_token: randomBytes(18).toString("base64url"),
@@ -59,15 +60,20 @@ export async function createOrder({ lines, details }: OrderInput, ip: string) {
     khqr_qr: qr.qr,
     khqr_deeplink: await generateDeeplink(qr.qr),
     ip_hash: ipHash,
-    expires_at: new Date(Date.now() + QR_LIFETIME_MS).toISOString(),
+    expires_at: expiresAt,
   });
   return { orderId: order.id };
 }
 
 export async function notifyAdmin(order: OrderRow) {
   try {
-    await sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID ?? "", formatAdminMessage(order));
-    await db.markNotified(order.id);
+    if (!(await db.claimNotify(order.id))) return;
+    try {
+      await sendMessage(process.env.TELEGRAM_ADMIN_CHAT_ID ?? "", formatAdminMessage(order));
+    } catch (error) {
+      await db.releaseNotify(order.id);
+      throw error;
+    }
   } catch (error) {
     console.error("Admin notification failed, will retry", error);
   }
@@ -80,7 +86,7 @@ export async function settleOrder(md5: string) {
 
   const payment = await checkPaid(md5);
   if (!payment.paid) return false;
-  if (payment.currency !== "USD" || Math.abs(payment.amount - Number(order.total_usd)) > 0.005) {
+  if (payment.currency.toUpperCase() !== "USD" || Math.abs(payment.amount - Number(order.total_usd)) > 0.005) {
     console.error(`Payment mismatch for order ${order.id}: got ${payment.amount} ${payment.currency}, expected ${order.total_usd} USD`);
     return false;
   }
@@ -125,9 +131,7 @@ export async function runDaily() {
   await db.ping();
   const unsent = await db.unnotifiedPaid();
   await Promise.all(unsent.map(notifyAdmin));
-  let settled = 0;
-  for (const order of await db.stalePending()) {
-    if (await settleOrder(order.khqr_md5)) settled += 1;
-  }
+  const checks = await Promise.allSettled((await db.stalePending()).map((order) => settleOrder(order.khqr_md5)));
+  const settled = checks.filter((c) => c.status === "fulfilled" && c.value).length;
   return { retried: unsent.length, settled, ...(await db.cleanup()) };
 }

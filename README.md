@@ -97,6 +97,6 @@ The cron in `vercel.json` runs `/api/cron/daily` once a day at 03:00 UTC (10:00 
 ## 8. Operations
 
 - Supabase Hobby pauses a project after a week with no activity. The daily cron touches the database so this does not happen.
-- The daily cron also resends any admin message that failed, settles any order that was paid but never checked, deletes unpaid orders older than 24 hours, and clears the name, number and map link from paid orders after 90 days.
+- The daily cron also resends any admin message that failed, re-checks every unpaid order from the last 48 hours (so a payment is never lost if the khqr.dev webhook fails), deletes unpaid orders older than 48 hours, and clears the name, number and map link from paid orders after 90 days.
 - The admin Telegram group is the readable record of paid orders. Orders in Supabase keep the items and totals after the personal fields are cleared.
 - Order numbers start at SK-1001 and only count paid orders.

@@ -51,9 +51,16 @@ describe("checkPaid", () => {
     fetchMock.mockResolvedValue(reply(200, { data: { amount: 80, currency: "USD", tran_id: "T1" } }));
     expect(await checkPaid("m")).toEqual({ paid: true, amount: 80, currency: "USD" });
   });
-  it("treats a 200 without a payment body as unpaid", async () => {
+  it("treats a 200 without a payment body as unpaid and logs it", async () => {
+    const error = vi.spyOn(console, "error").mockImplementation(() => {});
     fetchMock.mockResolvedValue(reply(200, { data: null }));
     expect(await checkPaid("m")).toEqual({ paid: false });
+    expect(error).toHaveBeenCalled();
+    error.mockRestore();
+  });
+  it("accepts an amount sent as a string", async () => {
+    fetchMock.mockResolvedValue(reply(200, { data: { amount: "80.00", currency: "USD", status: "PAID" } }));
+    expect(await checkPaid("m")).toEqual({ paid: true, amount: 80, currency: "USD" });
   });
   it("respects an explicit non-paid status", async () => {
     fetchMock.mockResolvedValue(reply(200, { data: { amount: 80, currency: "USD", status: "UNPAID" } }));

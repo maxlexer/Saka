@@ -45,7 +45,7 @@ export function startMock(port = 4010) {
       if (url.pathname === "/v1/check_transaction_by_md5") {
         const entry = state.khqr.find((e) => e.md5 === body.md5);
         if (!entry?.paid) return send(404, { responseCode: 1, errorCode: 1, responseMessage: "Transaction could not be found." });
-        return send(200, { responseCode: 0, data: { amount: entry.paidAmount ?? entry.amount, currency: "USD", tran_id: "T" } });
+        return send(200, { responseCode: 0, data: { amount: entry.paidAmount ?? entry.amount, currency: "USD", status: "paid", tran_id: "T" } });
       }
     }
 

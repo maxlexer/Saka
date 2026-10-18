@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { encode } from "uqr";
-import { clearCart, setActiveOrder, useCart } from "@/lib/cart";
+import { clearCart, setActiveOrder, useActiveOrder, useCart } from "@/lib/cart";
 import { loadDraft, submitOrder } from "@/lib/checkout-client";
 import type { OrderView } from "@/lib/orders";
 import { formatRiel, formatUsd } from "@/lib/pricing";
@@ -15,6 +15,9 @@ import { PaymentSkeleton } from "./Skeletons";
 
 type Loaded = OrderView | { state: "missing" };
 const QR_LIFETIME_MS = 10 * 60_000;
+const POLL_MS = 3000;
+/** Keep checking for two minutes after expiry, so a payment made in the last seconds still lands. */
+const EXPIRED_POLLS = 40;
 
 function useOrderView(orderId: string) {
   const [view, setView] = useState<Loaded | null>(null);
@@ -22,8 +25,8 @@ function useOrderView(orderId: string) {
   const refresh = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
-    setView(null);
     let live = true;
+    let expiredPolls = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
     const tick = async () => {
       if (document.hidden) return;
@@ -34,11 +37,11 @@ function useOrderView(orderId: string) {
         if (!res.ok) throw new Error("status failed");
         const next = (await res.json()) as OrderView;
         setView(next);
-        if (next.state !== "pending") return;
+        if (next.state === "paid" || (next.state === "expired" && ++expiredPolls > EXPIRED_POLLS)) return;
       } catch {
         // Network trouble: keep the last screen and try again.
       }
-      timer = setTimeout(tick, 3000);
+      timer = setTimeout(tick, POLL_MS);
     };
     const onVisible = () => {
       if (document.hidden) return;
@@ -96,17 +99,16 @@ function Countdown({ expiresAt, onDone }: { expiresAt: string; onDone: () => voi
 export function PaymentScreen({ orderId, botUsername }: { orderId: string; botUsername: string }) {
   const router = useRouter();
   const { lines } = useCart();
+  const activeOrder = useActiveOrder();
   const { view, refresh } = useOrderView(orderId);
   const [dismissed, setDismissed] = useState(false);
   const [retryError, setRetryError] = useState("");
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (view?.state === "paid") {
-      clearCart();
-      setActiveOrder(null);
-    }
-  }, [view?.state]);
+    if (view?.state === "paid") clearCart();
+    if (view?.state === "paid" || (view?.state === "missing" && activeOrder === orderId)) setActiveOrder(null);
+  }, [view?.state, activeOrder, orderId]);
 
   async function newCode() {
     const details = detailsSchema.safeParse(loadDraft());
@@ -142,7 +144,8 @@ export function PaymentScreen({ orderId, botUsername }: { orderId: string; botUs
         <div className="wrap max-w-[520px] text-center">
           <p className="eyebrow">Payment</p>
           <h1 className="h2 mt-3">This code has expired.</h1>
-          <p className="mt-4 text-muted">Your cart is saved.</p>
+          <p className="mt-4 text-muted">If you have just paid, wait a moment. This page updates on its own.</p>
+          {lines?.length ? <p className="mt-2 text-muted">Your cart is saved.</p> : null}
           <button type="button" onClick={newCode} disabled={busy} aria-busy={busy} className="btn btn-primary mt-8">
             {busy ? "Preparing your code" : lines?.length ? "Create a new code" : "Back to checkout"}
           </button>

@@ -18,7 +18,7 @@ These are defaults I chose. Say which to change.
 2. **Intro runs on the home page only**, on every full load of `/`. It never runs on `/products`, `/checkout` or a return from a banking app.
 3. **Dark mode is shipped now** for all UI. The hero stage and the intro stay on the cream tones, because the bottle photography is shot on cream and cannot sit on #171A12 without cutouts. The dark mist palette is defined for when cutouts exist.
 4. **Home shows 3 preview cards on desktop and 6 on mobile.** Cards on home and in the finder can add to cart.
-5. **Retention.** Paid orders keep customer fields for 90 days, then the name, number and map link are cleared. Order number, items, total and times stay. Unpaid orders are deleted after 24 hours.
+5. **Retention.** Paid orders keep customer fields for 90 days, then the name, number and map link are cleared. Order number, items, total and times stay. Unpaid orders are deleted after 48 hours, once the daily cron has re-checked each of them at least once.
 6. **Customer confirmation text.** Order number, total, paid time, pickup or delivery. No item list.
 7. **Order numbers** are sequential (`SK-1001`, `SK-1002`), assigned only when an order is paid, so abandoned checkouts leave no gaps.
 8. **QR styling.** The QR is drawn in #171A12 on #FAF6EE to stay in palette. Check this against the Bakong and khqr.dev display rules before launch. If a standard KHQR card is required, it is shown as a third-party payment asset.
@@ -210,10 +210,10 @@ One function, `settleOrder(md5)`, used by the status route, the webhook and the 
 1. Call `check_transaction_by_md5`. A 404 means not paid, so stop. A 200 with `data.amount` and `data.currency` means paid.
 2. Confirm the currency and that `amount` equals the stored `total_usd` (within half a cent). If not, log and stop. This also protects against a short payment.
 3. Call `settle_order(md5)`. If no row returns, another caller already won. Stop.
-4. The winner posts the admin message (section 7.1). On success, set `admin_notified_at`.
-5. If the post fails, `admin_notified_at` stays null. Any later status poll or the daily cron retries it. A rare duplicate message is accepted over a lost one.
+4. The winner posts the admin message (section 7.1). Before sending, a caller claims it by setting `admin_notified_at` with a conditional update (`where admin_notified_at is null`). Only the caller that gets a row back sends, so a webhook and a poll racing on the same order post one message.
+5. If the post fails, the claim is released (`admin_notified_at` back to null). Any later status poll or the daily cron retries it. A message is lost only if the server dies between the claim and the send.
 
-The status route runs `settleOrder` only when the order is pending and `last_checked_at` is older than 5 seconds (khqr.dev caches repeat checks for 5 seconds anyway). This keeps khqr.dev traffic low however many viewers poll. The status route and the cron also check pending orders after the QR has expired, within 24 hours of creation, so a payment made at minute 9 and viewed at minute 11 is still settled. The amount check still protects the shop.
+The status route runs `settleOrder` only when the order is pending and `last_checked_at` is older than 5 seconds (khqr.dev caches repeat checks for 5 seconds anyway). This keeps khqr.dev traffic low however many viewers poll. The status route and the cron also check pending orders after the QR has expired, so a payment made at minute 9 and viewed at minute 11 is still settled. The open payment screen keeps polling for two minutes after expiry for the same reason. The amount check still protects the shop.
 
 ### 6.6 Webhook trigger (`/api/khqr/webhook`)
 
@@ -224,7 +224,7 @@ The webhook only speeds things up. The signed string and retry behavior of khqr.
 - Run `settleOrder(md5)`.
 - If `KHQR_WEBHOOK_SECRET` is set, also verify `X-RBK-Signature` as an HMAC-SHA256 of the raw body once the exact scheme is confirmed in the khqr.dev portal. Until then log mismatches and do not reject.
 
-Polling alone is enough for correctness. A customer who closes the tab after paying is still settled by the webhook, and by the cron as a last resort for orders that are pending, unexpired and unchecked.
+Polling alone is enough for correctness. A customer who closes the tab after paying is still settled by the webhook, and by the cron as a last resort, which re-checks every pending order from the last 48 hours whether or not it was polled before.
 
 ### 6.7 Security and abuse
 
@@ -430,7 +430,7 @@ Dependencies: next, react, typescript, tailwindcss, gsap, @gsap/react, ogl, zod,
 Variables: `NEXT_PUBLIC_SITE_URL`, `SANITY_PROJECT_ID`, `SANITY_DATASET`, `SANITY_REVALIDATE_SECRET`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `KHQR_TOKEN`, `KHQR_WEBHOOK_SECRET`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, `TELEGRAM_ADMIN_CHAT_ID`, `TELEGRAM_WEBHOOK_SECRET`, `CRON_SECRET`. Test only: `KHQR_API_BASE`, `TELEGRAM_API_BASE`.
 
 - Deploy on Vercel. Register the Telegram webhook with `setWebhook` and the secret token. Register the khqr.dev webhook URL in the portal.
-- Supabase Hobby pauses after a week of no activity. `/api/cron/daily` (Vercel Cron, once a day, protected by `CRON_SECRET`) runs a trivial query, retries paid orders with no `admin_notified_at`, settles pending unexpired orders that were never checked, deletes unpaid rows older than 24 hours, and clears customer fields on paid rows older than 90 days.
+- Supabase Hobby pauses after a week of no activity. `/api/cron/daily` (Vercel Cron, once a day, protected by `CRON_SECRET`) runs a trivial query, retries paid orders with no `admin_notified_at`, re-checks every pending order from the last 48 hours, deletes unpaid rows older than 48 hours, and clears customer fields on paid rows older than 90 days.
 - Setup steps for Sanity, Supabase, BotFather, the admin group and the khqr.dev store go in `README.md` during the build.
 
 ## 14. Build order

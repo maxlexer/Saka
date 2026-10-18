@@ -30,6 +30,8 @@ export type OrderRow = {
 export type NewOrder = Omit<OrderRow, "id" | "status" | "order_number" | "paid_at" | "admin_notified_at" | "last_checked_at" | "created_at">;
 
 const HOUR_MS = 60 * 60 * 1000;
+/** Unpaid orders stay this long, so the daily cron re-checks every one at least once before cleanup. */
+const PENDING_WINDOW_MS = 48 * HOUR_MS;
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
 
 let client: SupabaseClient | undefined;
@@ -57,8 +59,14 @@ export async function settleByMd5(md5: string) {
   return rows?.[0] ?? null;
 }
 
-export async function markNotified(id: string) {
-  ok(await db().from("orders").update({ admin_notified_at: new Date().toISOString() }).eq("id", id));
+/** True only for the one caller that claims the admin message, so concurrent settles post it once. */
+export async function claimNotify(id: string) {
+  const rows = ok(await db().from("orders").update({ admin_notified_at: new Date().toISOString() }).eq("id", id).is("admin_notified_at", null).select("id"));
+  return (rows?.length ?? 0) > 0;
+}
+
+export async function releaseNotify(id: string) {
+  ok(await db().from("orders").update({ admin_notified_at: null }).eq("id", id));
 }
 
 export async function touchChecked(id: string) {
@@ -76,11 +84,11 @@ export async function unnotifiedPaid() {
 }
 
 export async function stalePending() {
-  return ok(await db().from("orders").select().eq("status", "pending").is("last_checked_at", null).gte("created_at", ago(24 * HOUR_MS)).limit(50)) as OrderRow[];
+  return ok(await db().from("orders").select().eq("status", "pending").gte("created_at", ago(PENDING_WINDOW_MS)).order("created_at").limit(100)) as OrderRow[];
 }
 
 export async function cleanup() {
-  const deleted = await db().from("orders").delete({ count: "exact" }).eq("status", "pending").lt("created_at", ago(24 * HOUR_MS));
+  const deleted = await db().from("orders").delete({ count: "exact" }).eq("status", "pending").lt("created_at", ago(PENDING_WINDOW_MS));
   const scrubbed = await db()
     .from("orders")
     .update({ customer_name: null, telegram: null, map_url: null }, { count: "exact" })

@@ -33,3 +33,16 @@ Accepted:
 Rejected:
 - Blue focus ring example. The ring uses the brand secondary, #8C7964.
 - Pushing history entries for the menu. It is a transient overlay and closes on link click, so back behaves normally.
+
+## Pass 1 product card and section rhythm
+
+Queries: expandable card with size selector and quantity stepper, ecommerce card out-of-stock state. Both returned only loosely related generic guidance, so no database match was found for the card itself and the card follows the brief.
+
+Accepted:
+- Body text stays at 16px on mobile. Captions and metadata use the brief's 13px and 14px small style, which is below the generic 16px suggestion on purpose.
+- A consistent type scale. The scale is the brief's: 12, 13, 14, 16, 17, 18, 22, 24, 32, 48.
+
+Brief wins:
+- Card is an outlined 2px-radius surface with a 1px border that turns #8C7964 on hover, not a shadowed tile.
+- Size selector is three outlined segments, the selected one filled with the primary color.
+- Out of stock is text plus an icon in the error color, never color alone, and the add button is disabled.

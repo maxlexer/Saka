@@ -20,3 +20,16 @@ Rejected:
 - ScrollTrigger reveal with `toggleActions: reverse`. Sections fade up once only.
 
 Deviation recorded from the plan header: product cards use 16px padding below 768px so two columns fit at 390px. 24px applies from 768px up.
+
+## Pass 1 header, menu, footer
+
+Queries: modal focus handling, mobile navigation overlay.
+
+Accepted:
+- A 2px focus outline with 2px offset on every control, including dialog controls. This is the global `:focus-visible` rule.
+- A sticky header, not a fixed one, so it takes up layout space and needs no body padding. `scroll-padding-top` keeps anchor targets clear of it.
+- Native `<dialog>` with `showModal()` for the cart and the mobile menu. Focus trap, Escape and focus return come from the platform.
+
+Rejected:
+- Blue focus ring example. The ring uses the brand secondary, #8C7964.
+- Pushing history entries for the menu. It is a transient overlay and closes on link click, so back behaves normally.

@@ -23,28 +23,36 @@ Feeling: calm, refined, tactile, like a soft pouch opening to reveal a bottle. L
 - Web design decisions go through the UI-UX-Pro-Max skill (`ui-ux-pro-max:ui-ux-pro-max`). Run it before designing or restyling any section or component. Its output must still obey the brand brief below. The brand brief wins any conflict.
 - All web animation uses GSAP (`gsap` plus `@gsap/react` and its `useGSAP` hook for React cleanup). Load the `gsap-skills` guidance (core, timeline, react, performance) before writing animation code.
 - Do not add Motion, Framer Motion, or another animation library.
-- GSAP is used for: the intro timeline, section fade-ups, product card expand and collapse, link underlines if not pure CSS, and the cart drawer.
+- GSAP is used for: the intro timeline, section fade-ups, the product modal (open, close, bottle glide), bottle float and spin, link underlines if not pure CSS, and the cart drawer. The only CSS motion allowed is small control state transitions (hover colors, the admin switch), the theme color fade and the dialog `::backdrop` fade (GSAP cannot reach it).
 - Every GSAP animation must respect `prefers-reduced-motion` (use `gsap.matchMedia()`).
+- Nothing snaps. Use the shared `MOTION` constants in `src/lib/gsap.ts` (enter 0.7s `power3.out`, exit 0.5s `power2.inOut`, glide 0.8s `power3.inOut`). No back, elastic or bounce eases. Nothing visible under 300ms except press feedback. Overlap timeline steps so elements transition into each other.
 
 ## Locked decisions (override the original overview)
 
+The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2026-10-18) changed several decisions below. Where it and the original spec disagree, the redesign spec wins.
+
+
 - English only. No Khmer, no language toggle, no Noto Sans Khmer, no hreflang, no `_kh` fields, no i18n layer. The brand brief's "Khmer and English side by side" line does not apply.
 - There IS a cart and a checkout page. The original "no cart, no checkout" assumption is dropped. See "Checkout flow" below.
-- Routes: `/` home, `/products` full catalog, `/checkout`, an order status route keyed by order id (used for mobile resume and the Telegram popup), and a branded `/404`. There are no per-product detail pages.
-- Home shows a small set of preview product cards (3 or 6) with a "view products" arrow linking to `/products`. The full grid lives only on `/products`.
-- The scent finder lives on the home page only, not on `/products`.
-- Adding to cart is blocked for Out of Stock perfumes (the button is disabled and the card says so). Stock is changed manually by staff in Sanity. Checkout re-checks the flag against live data.
-- Stock is tracked per perfume, not per bottle size, and has no count. Each perfume is either Available or Out of Stock, a single boolean field in Sanity that staff edit. Sizes only differ by price. The old "In stock / Few left / Out of stock" three-state label and per-size stock are dropped. Out of Stock keeps the text and icon rule (never color alone).
-- Exchange rate: 1 USD = 4000 KHR, a fixed constant in code. Riel is shown for information. USD is the only price staff enter.
+- Routes: `/` home, `/products` full catalog, `/checkout`, an order status route keyed by order id (used for mobile resume and the Telegram popup), `/admin` (login, products and prices, transactions), and a branded `/404`. There are no per-product pages: each perfume opens in a modal addressed by `?scent=<slug>` on the current page, so it can be shared and Back closes it.
+- Home shows 6 preview cards (3 visible on desktop, 6 on mobile) with a "view products" arrow linking to `/products`. `/products` groups all perfumes under the four families (Fresh, Woody, Oriental, Aromatic).
+- The scent finder lives on the home page only, not on `/products`. Its results open the product modal.
+- Product cards show only the floating bottle and the full perfume name. No sizes, prices, stock or Riel on cards or anywhere on home. Sizes, prices and stock appear only inside the product modal, where the visitor adds to cart.
+- Catalog: Sanity is removed. Perfumes and prices live in Supabase and are edited only in the one-password `/admin` page. Staff can rename a perfume, toggle Available or Out of Stock, change the three size prices and view paid transactions. Staff cannot add or delete perfumes. The 20 perfumes are seeded from `supabase/seed/catalog.json`.
+- Stock is tracked per perfume, not per bottle size, and has no count: one boolean that staff toggle in admin. Checkout re-checks it against live data. Out of Stock is shown as one "Out of stock" pill in the modal and a disabled Add to cart button. No icon, no red, no second warning.
+- Prices: one USD price per size (10ml, 20ml, 50ml), shared by every perfume. USD only, everywhere: no Riel, no KHR, no exchange rate in code or copy.
+- Store address, hours, phone, map link and social links are constants in `src/lib/store.ts`.
+- Theme: always light on first visit. A theme switch in the header toggles dark mode and is remembered per device in `localStorage` (`saka.theme`). Dark tokens apply under `html[data-theme="dark"]`, not `prefers-color-scheme`.
 - Size images are not needed. Only the perfume has images. The 10ml, 20ml and 50ml bottles appear as text only (name and size, for example "Name, 20ml") in the cart and at checkout. No size lineup image section.
 - The logo is delivered as a hand-built SVG, created for the user. Source files: `Saka logo.jpg` and `SakaBG logo.png` in the project root, both raster on pure white and for reference only. Use the SVG everywhere. Never place the raster files on the site.
-- Bottle spin: the user will supply videos later. Until then use clearly marked placeholder frames. When the videos arrive, extract and optimize the turntable frames from them.
-- Intro sequence: 0 to 1s logo fades in then out. 1 to 3s the bottle fades in, spins, and lightly lands as the hero image. The mist then covers and animates over the hero. The intro is skippable and respects reduced motion.
+- Bottle spin: every bottle (the hero and each perfume) has a transparent `still.webp` and a 36-frame `spin.webp` sprite, made by `scripts/frames.mjs`. The user will supply videos later. Until then use clearly marked placeholders. Cards float and spin once on desktop hover. The modal bottle floats and turns every few seconds.
+- Hero: a floor scene (AI-generated light and dark backdrops, approved by the user) with the bottle standing on the floor, the headline and one VIEW PRODUCTS button on the left. Far less text than the reference.
+- Intro sequence: 0 to 1s logo fades in then out. 1 to 3s the bottle fades in at center and spins. 3 to 4.2s it glides down onto the floor while the floor scene dissolves in, then the headline, button and header fade up and the mist breathes in. Skippable, respects reduced motion.
 
 ## Checkout flow (locked)
 
 - Customer details at checkout: name and Telegram number. Nothing else is collected beyond the delivery link below.
-- Fulfilment: the customer chooses pickup or delivery. Pickup is free. Delivery needs a pasted Google Maps link and adds a constant $2.00 fee (show the Riel amount too).
+- Fulfilment: the customer chooses pickup or delivery. Pickup is free. Delivery needs a pasted Google Maps link and adds a constant $2.00 fee.
 - Payment: KHQR through Bakong, using the khqr.dev relay. KHQR only, no cards.
 - Mobile resume: the visitor leaves for their banking app to pay, then comes back. Checkout state (cart, entered details, order id, current step, payment status) must survive that, so they land on the correct screen. Persist it client-side and key the order by an id in the URL so a reload or return restores the right step. Never drop them back at an empty cart.
 - Orders live in Supabase (Hobby plan), accessed only from the server with the service role key. No chat ids are stored and there is no customer table. The admin Telegram group is the human-readable record of paid orders.
@@ -63,30 +71,29 @@ Feeling: calm, refined, tactile, like a soft pouch opening to reveal a bottle. L
 - The portal docs mention webhook events `payment.success`, `payment.scanned`, `payment.expired`, signed with HMAC-SHA256 in `X-RBK-Signature`, payload `md5`, `tran_id`, `amount`, `currency`, `paid_at` only. The signed string and retry policy are undocumented, so a webhook is only a trigger. The payload is never trusted.
 - Browser events (`bakongPaymentSuccess` and others) are UI only. Never fulfil from them.
 - Return URLs must be on a domain verified in the developer portal (DNS TXT or file).
-- Always confirm a webhook with a server-side `check_transaction_by_md5` call and compare the amount against the total recomputed from Sanity prices plus the delivery fee.
+- Always confirm a webhook with a server-side `check_transaction_by_md5` call and compare the amount against the total recomputed from the live Supabase size prices plus the delivery fee.
 - The cart and checkout show perfume name and size as text only (for example "Name, 20ml"). No size images.
 - A popup here is allowed because it is user-triggered by completing payment. It is not a first-load popup. Use the single permitted soft shadow for it.
 
 ## Pending decisions (do not assume, ask or check the spec)
 
-- Everything else is in the design spec at `docs/superpowers/specs/2026-10-18-saka-parfum-design.md`. Its "Assumptions to confirm" section lists the defaults the user may still change.
-- How many preview cards the home page shows: 3 or 6, and whether they differ by breakpoint (default: 3 on desktop, 6 on mobile, which keeps full rows at 3 and 2 columns).
-- Whether home preview cards and scent finder results can add to cart directly (default: yes, same card component as the products page).
+- Everything else is in the design specs: `docs/superpowers/specs/2026-10-18-saka-parfum-design.md` and the redesign `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (section 11 lists what the owner still has to supply).
 
 ## Stack (from the original overview, still valid unless listed above as changed)
 
 - Next.js App Router with TypeScript, server-rendered, incremental static regeneration for catalog updates.
-- Tailwind CSS with design tokens as CSS variables. Light and dark mode via `prefers-color-scheme`.
+- Tailwind CSS with design tokens as CSS variables. Light by default, dark via `html[data-theme="dark"]` set by the header switch.
 - `next/font`: Montserrat 400 and 500, Jost 400 and 500. No layout shift.
 - GSAP for animation. OGL with one custom fragment shader for the mist, lazy loaded after the intro starts.
-- Sanity for products (including the Available or Out of Stock flag) and store settings. Zod validates all fetched data before render.
+- Supabase for products, size prices and orders, server-only with the service role key. Admin saves call `revalidatePath` so cached pages refresh. Zod validates all fetched data before render. No Sanity.
 - khqr.dev (Bakong relay) for KHQR payments. Telegram Bot API for customer confirmations and the admin group message.
 - Vercel hosting. Playwright and axe-core for end-to-end and accessibility checks.
 - Targets on mobile: Lighthouse Performance, Accessibility, Best Practices and SEO at 90 or higher (Accessibility and SEO 95 or higher). LCP under 2.5s, CLS under 0.1, INP under 200ms. Initial JavaScript under 170KB gzipped, excluding the mist chunk. WCAG 2.2 AA. axe-core reports zero serious or critical issues.
 
 ## Mist rules (the brand brief lists smoke as off-brand, the client asked for mist)
 
-- Soft, slow, low-contrast fog using only #F2EBDF, #DCD0BF and #AD9883. Dark mode: #23261C, #3A3A2C, #8C7964.
+- Soft, slow, low-contrast fog using only #F2EBDF, #DCD0BF and #AD9883. Dark mode: #23261C, #3A3A2C, #8C7964 (the mist follows the theme switch).
+- The mist hangs low over the hero floor: a CSS mask fades it out above roughly 65 percent of the hero height.
 - No sparkles, no glow, no new hues, no gradients outside the mist itself.
 - Alpha caps: 0.55 near hero edges, 0.3 over the bottle, 0.15 behind headline text. Buttons are never covered.
 - Reacts to pointer or finger only. Nothing moves on scroll (no parallax). Never blocks vertical scroll.
@@ -147,11 +154,11 @@ The logo is a geometric sans in uppercase with very wide tracking, pointed apexe
 
 ## Visual style
 
-- Radius: 2px on buttons, inputs and cards. Product images 0px. No pills, no radius above 4px.
+- Radius (changed by the redesign): 8px on cards, the product modal, the cart drawer and admin panels. 4px on buttons, inputs and the size selector. The "Out of stock" pill in the modal is the only fully rounded element. Nothing else above 8px.
 - Flat surfaces with 1px #DCD0BF borders. No drop shadows, except one soft `0 8px 24px rgba(23,26,18,0.08)` on the open cart drawer or modals.
 - Spacing: airy. Base unit 8px. Section padding 96px desktop, 56px mobile. Card padding 24px. Content max width 1200px. Text blocks max 62ch.
 - Layout: centered, symmetrical, lots of empty cream space. Product grid 3 columns desktop, 2 mobile, bottle photo large with name and price below, centered. Hero is a single large bottle image with the wordmark-style headline.
-- Size selector: three outlined segments (10ml, 20ml, 50ml), 2px radius, selected one filled #171A12 with cream text.
+- Size selector (modal only): three outlined segments (10ml, 20ml, 50ml, each with its USD price), 4px radius, selected one filled #171A12 with cream text.
 - Imagery: bottles on cream or warm taupe (#AD9883) seamless backgrounds, soft side daylight, centered, shallow shadow. Optional lifestyle shots with linen, skin tones and fabric textures. Warm and slightly desaturated. No green or colorful backdrops.
 - Icons: 1.5px stroke line icons, square caps, 24px, #171A12 or #8C7964. No filled or multicolor icons.
 - Motion: slow and subtle. Product card hover: image scales to 1.03 over 400ms ease-out, border shifts to #8C7964. Primary buttons invert fill over 250ms. Links get a 1px underline that grows from the left over 300ms. Sections fade up 12px over 500ms. Respect `prefers-reduced-motion`.
@@ -162,7 +169,7 @@ The logo is a geometric sans in uppercase with very wide tracking, pointed apexe
 - Short sentences, 12 words or fewer where possible.
 - Describe scent with notes and moments (jasmine, amber, rain on warm stone), not hype.
 - Warm second person ("you"), never pushy.
-- State sizes and prices plainly (10ml, 20ml, 50ml) with the price in USD and Riel where relevant.
+- State sizes and prices plainly (10ml, 20ml, 50ml) with the price in USD, only inside the product modal, cart and checkout.
 - No exclamation marks. No all caps outside headings and buttons.
 - Example headline: Find the scent that feels like you.
 - Example subheadline: Fragrance in 10ml, 20ml and 50ml bottles, from our shop in Cambodia.
@@ -173,7 +180,7 @@ The logo is a geometric sans in uppercase with very wide tracking, pointed apexe
 - No green, blue, pink, gold foil or any color outside the palette.
 - No #FFFFFF or #000000 backgrounds. Use #FAF6EE and #171A12.
 - No script, serif display or decorative fonts. No heading weight above 500.
-- No pill buttons, radii above 4px, glassmorphism, gradients or heavy shadows.
+- No pill buttons, radii above 8px, glassmorphism, gradients or heavy shadows.
 - No luxury clichés: gold sparkles, smoke (except the approved mist above), rose petals, couples in embrace.
 - No cluttered banners, countdown timers, flashing sale badges, or popups on first load.
 - No carousel that auto-advances faster than 6 seconds. No parallax.

@@ -1,5 +1,7 @@
 # SAKA Parfum Pass 4: Turntable Frames, Intro and Mist Implementation Plan
 
+> **Superseded on 2026-10-18 by `2026-10-18-saka-parfum-07-r3-intro-hero-mist.md`.** Do not execute this plan. R3 reuses only Task 2 (mist shader, math, harness, cap test) and the `Mist.tsx` code in Task 3 Step 2, with the amendments R3 lists.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship the brand moment: a 3 second intro (logo, then a bottle that spins and lands as the hero image), a hero covered by a soft, pointer-reactive WebGL mist, and every fallback (reduced motion, no WebGL2, no JavaScript, slow or failed assets) without hurting Lighthouse, LCP or the 170KB budget.

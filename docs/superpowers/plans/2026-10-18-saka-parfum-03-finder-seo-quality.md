@@ -10,6 +10,49 @@
 
 **Spec:** `docs/superpowers/specs/2026-10-18-saka-parfum-design.md`, sections 8.9, 8.1 (dark mode), 9, 10, 12. Passes 1 and 2 must be complete.
 
+## Redesign revision (2026-10-18), read before any task
+
+This plan now runs after R1 (`2026-10-18-saka-parfum-05-r1-data-admin.md`) and R2 (`2026-10-18-saka-parfum-06-r2-storefront.md`) and before R3. The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` wins wherever this plan disagrees. Where a task below says otherwise, apply these changes instead:
+
+**Global Constraints**
+- Delete the "Radius 2px, no pills" line. Use `rounded-card` (8px) on panels and `rounded-sm` (4px) on chips, buttons and inputs. The only pill is the modal's out-of-stock pill.
+- Delete the "Exchange rate 1 USD = 4000 KHR" line. USD only. The delivery fee stays $2.00.
+- Delete the "Dark mode via `prefers-color-scheme`... cream hero" line. Dark mode is the header switch from R2 (`html[data-theme="dark"]`). The hero is theme-aware and owned by R3.
+- Finder chips have a 4px radius (not 2px). Sorting uses `sort` (not `displayOrder`).
+
+**Data model everywhere:** import `Product` from `@/lib/catalog` (Sanity is gone). A product has a single `family: ScentFamily`, not `scentFamily: ScentFamily[]`, and `sort` instead of `displayOrder`. Store details come from `STORE` in `@/lib/store` (no `SiteSettings`). Product images are `/products/<slug>/still.webp`. Families are fresh, woody, oriental and aromatic. Occasions are everyday, work, evening, date night and ceremony (no gift).
+
+**Task 1 (finder logic)**
+- In `src/lib/finder.ts`: `import type { Product } from "./catalog";`, `tagsOf` returns `[p.family]` for `families`, and `shelfOrder` compares `a.sort - b.sort` instead of `displayOrder`.
+- In `tests/unit/finder.test.ts`:
+  - The helper becomes `({ id, name: id, vibes: [], occasions: [], family: "fresh", available: true, sort: 100, ...over }) as Product`.
+  - `rose` gets `family: "oriental"`, `cedar` gets `family: "woody"`, `citrus` gets `family: "fresh"`.
+  - Every `displayOrder:` becomes `sort:`.
+
+**Task 2 (finder UI)**
+- `Finder` takes `products: Product[] | null`, as written. Home reads `const catalog = await getCatalog().catch(() => null);` and passes `catalog?.products ?? null`. Home keeps R2's `previewPicks` preview and the `ProductModal`.
+- Results use R2's `ProductGrid`, so cards open the product modal. Chip CSS uses `border-radius: 4px`.
+- Do not add the second hero button (`Find your scent`): the redesigned hero has one button only. Keep the nav link `{ href: "/#finder", label: "Scent finder" }`.
+- In `finder.spec.ts`, every `#finder article` selector becomes `#finder a[href*="scent="]`.
+
+**Task 3 (SEO)**
+- `jsonld.ts` and its test:
+  - `localBusiness(store: typeof STORE, siteUrl)` reads `store.name`, `store.address`, `store.phone`, `store.mapUrl` and `store.socialLinks`.
+  - `productList` uses `image: `${siteUrl}/products/${p.id}/still.webp``.
+  - The tests use a perfume from `supabase/seed/catalog.json` instead of "Jasmine Rain".
+- The meta description must not mention sizes. Use: "Designer fragrance from SAKA Parfum, a perfume shop in Cambodia. Find a scent by mood or occasion."
+- `robots.ts` also disallows `/admin`.
+
+**Task 4 (dark mode completion): skip it.** R2 replaced it. Do not add `.light-island`.
+
+**Task 5 (keyboard and accessibility)**
+- Delete the "a product card toggles with Enter and Space" test. R2's `modal.spec.ts` covers keyboard use of cards and the modal.
+- The dark-theme axe loop sets `localStorage["saka.theme"] = "dark"` with `addInitScript` instead of `colorScheme: "dark"`, and adds `/admin/login` to the pages checked.
+
+**Task 6 (budget and Lighthouse):** unchanged. "Real Sanity data" now means the real Supabase catalog on the Vercel preview.
+
+**Task 7:** in the handoff, R3 runs next (not plan 04).
+
 ## Global Constraints
 
 Copied from `CLAUDE.md` and the spec. They apply to every task.

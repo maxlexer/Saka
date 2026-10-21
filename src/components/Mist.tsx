@@ -2,7 +2,7 @@
 
 import { Mesh, Program, Renderer, Triangle } from "ogl";
 import { useEffect, useRef } from "react";
-import { createBudget, hexToRgb, MIST_COLORS, MIST_COLORS_DARK, toCanvasRect, type Box } from "@/lib/mist-math";
+import { createBudget, hexToRgb, MIST_COLORS, MIST_COLORS_DARK, MIST_STILL_TIME, toCanvasRect, type Box } from "@/lib/mist-math";
 import { fragment, vertex } from "@/lib/mist-shader";
 
 const ZERO: Box = [0, 0, 0, 0];
@@ -97,6 +97,7 @@ export default function Mist({ onFail }: { onFail: () => void }) {
     hero.addEventListener("pointercancel", onLeave);
 
     const tooSlow = createBudget();
+    const born = performance.now();
     let raf = 0;
     let last = 0;
     let visible = true;
@@ -121,7 +122,7 @@ export default function Mist({ onFail }: { onFail: () => void }) {
       uniforms.uForce.value = active ? uniforms.uForce.value + (1 - uniforms.uForce.value) * 0.1 : uniforms.uForce.value * Math.exp(-dt / 650);
       uniforms.uPointer.value = [current.x, current.y];
       uniforms.uSwirl.value = [swirl.x, swirl.y];
-      uniforms.uTime.value = now / 1000;
+      uniforms.uTime.value = MIST_STILL_TIME + (now - born) / 1000;
       renderer.render({ scene: mesh });
     };
     const start = () => {

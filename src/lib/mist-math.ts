@@ -3,6 +3,9 @@ export type Box = [number, number, number, number];
 export const MIST_COLORS = ["#F2EBDF", "#DCD0BF", "#AD9883"] as const;
 export const MIST_COLORS_DARK = ["#23261C", "#3A3A2C", "#8C7964"] as const;
 
+/** Shader time of the captured still. The live mist starts its clock here, so swapping the still for the canvas does not jump. */
+export const MIST_STILL_TIME = 40;
+
 export function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];

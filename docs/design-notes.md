@@ -262,3 +262,24 @@ UI-UX-Pro-Max queries: intro animation skip button (ux), page load sequence (gsa
 - The logo is passed in from the server page, so its paths ship as HTML, not code.
 - Deviations from the plan's snippet: the overlay sits inside `main`, so `main`'s other children, the header, footer and skip link go inert, not `main` itself (that would have made Skip unclickable). Only a width change ends the intro, because phones fire resize when the address bar moves. Skip takes focus without a ring (Enter and Escape work globally, Tab still shows the ring) and fades out as the glide starts, so it never overlaps the hero button on phones.
 - Specs that interact with home load `/?x=1`, `/#finder` or `/#collection`, which skip the intro. The SEO spec keeps plain `/`.
+
+## R3 numbers (local, `npm run lighthouse`, median of 3, mobile emulation)
+
+| | `/` plan 03 | `/` R3 first pass | `/` R3 now | `/products` R3 now | Target |
+|---|---|---|---|---|---|
+| Performance | 88 | 65 | 87 | 84 | 90 |
+| Accessibility | 100 | 100 | 100 | 100 | 95 |
+| Best practices | 100 | 100 | 100 | 100 | 90 |
+| SEO | 100 | 100 | 100 | 100 | 95 |
+| LCP | 3.36s | 4.16s | 3.63s | 3.77s | 2.5s |
+| CLS | 0.000 | 0.000 | 0.000 | 0.000 | 0.1 |
+| TBT | 260ms | 1538ms | 176ms | 234ms | 200ms |
+| Initial JS | 168.5KB | 170.1KB | 169.6KB | 167.2KB | 170KB |
+
+`/products` has no R3 code; its numbers match plan 03 within run-to-run noise (single runs moved TBT by over 60ms).
+
+What the first pass showed and what changed:
+- A 1.7s long task in React's commit phase was OGL creating the WebGL2 context (967ms self time at 4x CPU in a profile), plus native GPU time. The mist now starts as its captured still, the same shader frame at the same time, at full opacity since the caps are baked in. The live shader takes over in idle time after a pointer or finger first comes over the hero, with its clock starting at the still's time so the swap does not jump. The mist only reacts to the pointer, so nothing is lost but the slow drift before the first touch or hover.
+- The intro timeline moved to its own chunk (see "R3 intro"), so the intro adds under 0.5KB to the first load.
+- The LCP element is the light floor: in the first HTML, `fetchpriority=high`, eager, observed paint at 190ms. The simulated LCP miss is the one plan 03 recorded: Lighthouse's slow 4G model shares bandwidth between the image and the framework scripts. The floor in this build is a working copy graded from a thumbnail; measure again once the full size backdrop is in.
+- Mist guard: on an emulated Pixel 7 the live shader starts on tap at 1x to 4x CPU throttling and keeps running (its cost is GPU work, which CPU throttling does not slow, so the 45ms guard never trips). At 6x the main thread is never idle, so the shader never starts and the still stays. The guard logic is unit tested; a real low-end phone is still to be checked by hand.

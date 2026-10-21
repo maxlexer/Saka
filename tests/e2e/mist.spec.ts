@@ -1,14 +1,28 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { renderMist } from "../../scripts/lib/mist-harness.ts";
 import { toCanvasRect } from "../../src/lib/mist-math.ts";
+
+// The live shader only starts once a pointer comes over the hero.
+const hoverHero = (page: Page) => page.locator("section").first().hover({ position: { x: 200, y: 400 } });
 
 const VIEWPORTS = [{ width: 360, height: 740 }, { width: 768, height: 1024 }, { width: 1280, height: 800 }];
 
 test.describe("mist", () => {
   test.skip(({ isMobile }) => isMobile, "Viewports are set explicitly below");
 
+  test("the hero starts with the still, and the live canvas takes over on hover", async ({ page }) => {
+    await page.goto("/?x=1");
+    await expect(page.locator('section img[src="/mist-static.webp"]')).toBeVisible();
+    await page.waitForTimeout(1500);
+    await expect(page.locator("section canvas")).toHaveCount(0);
+    await hoverHero(page);
+    await expect(page.locator("section canvas")).toHaveCount(1);
+    await expect(page.locator('section img[src="/mist-static.webp"]')).toHaveCount(0);
+  });
+
   test("the canvas is decorative, never takes input, sits under the button and is masked low", async ({ page }) => {
     await page.goto("/?x=1");
+    await hoverHero(page);
     await expect(page.locator("section canvas")).toHaveCount(1);
     const layer = page.locator("[aria-hidden=true]:has(canvas)");
     expect(await layer.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
@@ -37,6 +51,8 @@ test.describe("mist", () => {
     const context = await browser.newContext({ reducedMotion: "reduce" });
     const page = await context.newPage();
     await page.goto("http://localhost:3100/");
+    await hoverHero(page);
+    await page.waitForTimeout(1000);
     await expect(page.locator('section img[src="/mist-static.webp"]')).toBeVisible();
     await expect(page.locator("section canvas")).toHaveCount(0);
     await context.close();
@@ -51,7 +67,10 @@ test.describe("mist", () => {
       } as typeof original;
     });
     await page.goto("/?x=1");
+    await hoverHero(page);
+    await page.waitForTimeout(1000);
     await expect(page.locator('section img[src="/mist-static-dark.webp"]')).toBeVisible();
+    await expect(page.locator("section canvas")).toHaveCount(0);
     await expect(page.getByText(/webgl|error|not supported/i)).toHaveCount(0);
   });
 });

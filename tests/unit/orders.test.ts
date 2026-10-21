@@ -3,17 +3,17 @@ import type { OrderRow } from "@/lib/supabase";
 
 vi.mock("@/lib/supabase");
 vi.mock("@/lib/khqr");
-vi.mock("@/lib/sanity", () => ({ getLiveProducts: vi.fn() }));
+vi.mock("@/lib/catalog", () => ({ getCatalog: vi.fn() }));
 vi.mock("@/lib/telegram", async (original) => ({ ...(await original<typeof import("@/lib/telegram")>()), sendMessage: vi.fn() }));
 
 import { checkPaid, generateDeeplink, generateQr } from "@/lib/khqr";
 import { createOrder, getOrderView, handleStart, notifyAdmin, OrderError, runDaily, settleOrder } from "@/lib/orders";
-import { getLiveProducts } from "@/lib/sanity";
+import { getCatalog } from "@/lib/catalog";
 import * as db from "@/lib/supabase";
 import { sendMessage } from "@/lib/telegram";
 
-const size = (sizeMl: 10 | 20 | 50, priceUsd: number) => ({ sizeMl, priceUsd });
-const product = (id: string, name: string, available = true) => ({ id, name, sizes: [size(10, 12), size(20, 22)], available }) as never;
+const product = (id: string, name: string, available = true) => ({ id, name, available }) as never;
+const catalogOf = (...products: never[]) => ({ products, prices: { 10: 12, 20: 22, 50: 48 } });
 
 const pendingRow = (over: Partial<OrderRow> = {}): OrderRow => ({
   id: "11111111-1111-4111-8111-111111111111", status: "pending", order_number: null, claim_token: "tok", customer_name: "Sokha Chan",
@@ -37,7 +37,7 @@ describe("createOrder", () => {
     details: { fulfilment: "delivery" as const, name: "Sokha", telegram: "12345678", mapUrl: "https://maps.app.goo.gl/x" },
   };
   beforeEach(() => {
-    vi.mocked(getLiveProducts).mockResolvedValue([product("a", "Jasmine Rain")]);
+    vi.mocked(getCatalog).mockResolvedValue(catalogOf(product("a", "Jasmine Rain")));
     vi.mocked(generateQr).mockResolvedValue({ qr: "QRSTRING", md5: "a".repeat(32), tranId: "T1" });
     vi.mocked(generateDeeplink).mockResolvedValue("https://link.khqr.dev/x");
     vi.mocked(db.insertOrder).mockImplementation(async (o) => ({ ...pendingRow(), ...o }) as OrderRow);
@@ -58,15 +58,13 @@ describe("createOrder", () => {
     expect(vi.mocked(db.insertOrder).mock.calls[0][0].khqr_deeplink).toBeNull();
   });
   it("names an out of stock item", async () => {
-    vi.mocked(getLiveProducts).mockResolvedValue([product("a", "Orange Peel", false)]);
+    vi.mocked(getCatalog).mockResolvedValue(catalogOf(product("a", "Orange Peel", false)));
     await expect(createOrder(input, "ip")).rejects.toMatchObject({ code: "unavailable", message: expect.stringContaining("Orange Peel") });
     expect(generateQr).not.toHaveBeenCalled();
   });
-  it("rejects a missing product or size", async () => {
-    vi.mocked(getLiveProducts).mockResolvedValue([]);
+  it("rejects a product that is no longer sold", async () => {
+    vi.mocked(getCatalog).mockResolvedValue(catalogOf());
     await expect(createOrder(input, "ip")).rejects.toBeInstanceOf(OrderError);
-    vi.mocked(getLiveProducts).mockResolvedValue([product("a", "Jasmine Rain")]);
-    await expect(createOrder({ ...input, lines: [{ productId: "a", sizeMl: 50, qty: 1 }] }, "ip")).rejects.toBeInstanceOf(OrderError);
   });
   it("rate limits five orders per ten minutes per IP", async () => {
     vi.mocked(db.countRecentByIp).mockResolvedValue(5);

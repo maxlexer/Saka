@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { addFirstProduct, expireOrders, fillDetails, mock, payAndTrigger, reachPayment, resetAll } from "./helpers";
+import { addFirstProduct, expireOrders, fillDetails, FIRST, mock, payAndTrigger, reachPayment, resetAll, setAvailable } from "./helpers";
 
 test.skip(({ isMobile }) => isMobile, "Payment flows run once, on desktop");
 test.skip(!process.env.SUPABASE_URL, "Needs a Supabase database in .env.test, see README");
@@ -14,7 +14,7 @@ test("pickup: pay, see the order number, admin gets one message, customer confir
   const admin = (await mock.messages()).filter((m) => m.chat_id === "-1001");
   expect(admin).toHaveLength(1);
   expect(admin[0].text).toContain("Fulfilment: Pickup");
-  expect(admin[0].text).toContain("Jasmine Rain, 10ml x1  $12.00");
+  expect(admin[0].text).toContain(`${FIRST.name}, 10ml x1  $12.00`);
   expect(admin[0].text).not.toContain("Map:");
 
   await expect(page.getByRole("dialog", { name: "Telegram confirmation" })).toBeVisible();
@@ -101,18 +101,18 @@ test("an expired code offers a fresh one and keeps the cart", async ({ page }) =
 
 test("checkout re-checks live stock and names the item", async ({ page }) => {
   await addFirstProduct(page);
-  await mock.stock("p-jasmine", false);
+  await setAvailable(FIRST.slug, false);
   await page.goto("/checkout");
   await fillDetails(page, "pickup");
   await page.getByRole("button", { name: "Pay with KHQR" }).click();
-  await expect(page.getByRole("alert")).toContainText("Jasmine Rain is out of stock");
+  await expect(page.getByRole("alert")).toContainText(`${FIRST.name} is out of stock`);
 });
 
 test("the status route hides personal data and unknown orders are not found", async ({ page, request }) => {
   await reachPayment(page, "pickup");
   const id = page.url().split("/").pop();
   const body = await (await request.get(`/api/orders/${id}`)).text();
-  expect(body).not.toMatch(/Sokha|345 678|Jasmine/);
+  expect(body).not.toMatch(/Sokha|345 678|Profondo/);
   expect((await request.get("/api/orders/00000000-0000-4000-8000-000000000000")).status()).toBe(404);
   await page.goto("/checkout/00000000-0000-4000-8000-000000000000");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("We could not find this order.");

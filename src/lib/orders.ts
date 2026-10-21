@@ -1,7 +1,8 @@
-import { createHash, randomBytes } from "node:crypto";
+import { randomBytes } from "node:crypto";
 import { checkPaid, generateDeeplink, generateQr } from "./khqr";
-import { computeTotals, priceOf } from "./pricing";
-import { getLiveProducts } from "./sanity";
+import { getCatalog } from "./catalog";
+import { hashIp } from "./ip";
+import { computeTotals } from "./pricing";
 import type { OrderInput } from "./schemas";
 import * as db from "./supabase";
 import type { OrderItem, OrderRow } from "./supabase";
@@ -24,22 +25,21 @@ export type OrderView =
   | { state: "paid"; orderNumber: string; totalUsd: number; fulfilment: "pickup" | "delivery"; claimToken: string };
 
 export async function createOrder({ lines, details }: OrderInput, ip: string) {
-  const ipHash = createHash("sha256").update(ip + (process.env.CRON_SECRET ?? "")).digest("hex");
+  const ipHash = hashIp(ip);
   if ((await db.countRecentByIp(ipHash, new Date(Date.now() - RATE_WINDOW_MS).toISOString())) >= RATE_MAX) {
     throw new OrderError("rate_limited", "Too many attempts. Please wait a few minutes and try again.", 429);
   }
 
-  const products = await getLiveProducts([...new Set(lines.map((l) => l.productId))]);
+  const { products, prices } = await getCatalog([...new Set(lines.map((l) => l.productId))]);
   const items: OrderItem[] = lines.map((line) => {
     const product = products.find((p) => p.id === line.productId);
-    const price = product && priceOf(product.sizes, line.sizeMl);
-    if (!product || price === undefined) {
+    if (!product) {
       throw new OrderError("unavailable", "An item in your cart is no longer sold. Please remove it to continue.", 409);
     }
     if (!product.available) {
       throw new OrderError("unavailable", `${product.name} is out of stock. Please remove it to continue.`, 409);
     }
-    return { productId: product.id, name: product.name, sizeMl: line.sizeMl, priceUsd: price, qty: line.qty };
+    return { productId: product.id, name: product.name, sizeMl: line.sizeMl, priceUsd: prices[line.sizeMl], qty: line.qty };
   });
 
   const { subtotalUsd, deliveryFeeUsd, totalUsd } = computeTotals(items, details.fulfilment);

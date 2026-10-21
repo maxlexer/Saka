@@ -48,7 +48,7 @@
   --color-ink: var(--ink);
   --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
-  --radius-sm: 2px;
+  --radius-sm: 4px;
   --shadow-soft: 0 8px 24px rgba(23, 26, 18, 0.08);
 }
 
@@ -100,7 +100,7 @@ button:not(:disabled) { cursor: pointer; }
 
   .btn {
     display: inline-flex; min-height: 44px; align-items: center; justify-content: center; gap: 8px;
-    padding: 0 28px; border: 1px solid transparent; border-radius: 2px;
+    padding: 0 28px; border: 1px solid transparent; border-radius: 4px;
     font-size: 13px; font-weight: 500; letter-spacing: 0.16em;
     transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease;
   }
@@ -109,6 +109,11 @@ button:not(:disabled) { cursor: pointer; }
   .btn-primary:not(:disabled):hover { background: transparent; color: var(--text); }
   .btn-secondary { background: transparent; color: var(--text); border-color: var(--secondary); }
   .btn-secondary:not(:disabled):hover { background: var(--btn); color: var(--btn-text); border-color: var(--btn); }
+  .input {
+    min-height: 44px; width: 100%; padding: 0 12px;
+    border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);
+  }
+  .input:focus { border-color: var(--secondary); }
 
   .link { position: relative; }
   .link::after {
@@ -124,7 +129,7 @@ button:not(:disabled) { cursor: pointer; }
   .skeleton { background: var(--surface); }
   .skip-link {
     position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px;
-    background: var(--btn); color: var(--btn-text); border-radius: 2px;
+    background: var(--btn); color: var(--btn-text); border-radius: 4px;
   }
   .skip-link:focus { top: 16px; }
 }

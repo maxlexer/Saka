@@ -3,22 +3,21 @@
 import Image from "next/image";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/lib/cart";
+import type { Product, SizePrices } from "@/lib/catalog";
 import { gsap, useGSAP } from "@/lib/gsap";
 import { formatUsd } from "@/lib/pricing";
-import type { Product } from "@/lib/sanity";
 import { MAX_LINE_QTY } from "@/lib/schemas";
-import { LABELS } from "@/lib/taxonomy";
+import { LABELS, SIZES_ML, type SizeMl } from "@/lib/taxonomy";
 import { AlertIcon, CheckIcon, MinusIcon, PlusIcon } from "./Icons";
 
-type Props = { product: Product; open: boolean; onToggle: () => void; priority?: boolean };
+type Props = { product: Product; prices: SizePrices; open: boolean; onToggle: () => void; priority?: boolean };
 
-export function ProductCard({ product, open, onToggle, priority = false }: Props) {
-  const { id, name, description, image, imageHover, sizes, available, scentFamily } = product;
+export function ProductCard({ product, prices, open, onToggle, priority = false }: Props) {
+  const { id, name, description, available, family } = product;
   const panelId = useId();
   const toggleRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  const [broken, setBroken] = useState(false);
-  const [sizeMl, setSizeMl] = useState(sizes[0].sizeMl);
+  const [sizeMl, setSizeMl] = useState<SizeMl>(10);
   const [qty, setQty] = useState(1);
   const [status, setStatus] = useState<"added" | "full" | null>(null);
   const { add } = useCart();
@@ -65,48 +64,23 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
       }}
       className="group border border-border bg-surface p-4 transition-colors duration-[400ms] ease-out hover:border-secondary md:p-6"
     >
-      <button
-        ref={toggleRef}
-        type="button"
-        aria-expanded={open}
-        aria-controls={panelId}
-        onClick={onToggle}
-        className="block w-full text-center"
-      >
+      <button ref={toggleRef} type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className="block w-full text-center">
         <span className="relative block aspect-square overflow-hidden bg-bg">
-          {broken ? (
-            <span className="absolute inset-0 grid place-items-center p-4 font-display text-sm uppercase tracking-[0.1em] text-muted">{name}</span>
-          ) : (
-            <>
-              <Image
-                src={image.url}
-                alt={image.alt}
-                fill
-                sizes="(min-width: 1024px) 360px, 50vw"
-                priority={priority}
-                placeholder={image.lqip ? "blur" : "empty"}
-                blurDataURL={image.lqip ?? undefined}
-                onError={() => setBroken(true)}
-                className="object-cover transition-transform duration-[400ms] ease-out group-hover:scale-[1.03]"
-              />
-              {imageHover && (
-                <Image
-                  src={imageHover.url}
-                  alt=""
-                  fill
-                  sizes="(min-width: 1024px) 360px, 50vw"
-                  className="object-cover opacity-0 transition-opacity duration-[400ms] ease-out group-hover:opacity-100"
-                />
-              )}
-            </>
-          )}
+          <Image
+            src="/turntable/frame-00.webp"
+            alt={`${name} bottle, placeholder image`}
+            fill
+            sizes="(min-width: 1024px) 360px, 50vw"
+            priority={priority}
+            className="object-cover transition-transform duration-[400ms] ease-out group-hover:scale-[1.03]"
+          />
         </span>
         <span className="h3 mt-5 block">{name}</span>
         <span className="small mt-2 block">
-          {sizes.map((s, i) => (
-            <Fragment key={s.sizeMl}>
+          {SIZES_ML.map((size, i) => (
+            <Fragment key={size}>
               {i > 0 && " · "}
-              <span className="whitespace-nowrap">{s.sizeMl}ml {formatUsd(s.priceUsd, true)}</span>
+              <span className="whitespace-nowrap">{size}ml {formatUsd(prices[size], true)}</span>
             </Fragment>
           ))}
         </span>
@@ -130,29 +104,16 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
             )}
           </dl>
           <p className="small">{description}</p>
-          {scentFamily.length > 0 && (
-            <ul className="flex flex-wrap gap-2">
-              {scentFamily.map((f) => (
-                <li key={f} className="rounded-sm bg-badge px-2 py-0.5 font-display text-[11px] font-medium uppercase tracking-[0.12em] text-ink">{LABELS[f]}</li>
-              ))}
-            </ul>
-          )}
+          <p className="w-fit rounded-sm bg-badge px-2 py-0.5 font-display text-[11px] font-medium uppercase tracking-[0.12em] text-ink">{LABELS[family]}</p>
 
           <fieldset>
             <legend className="eyebrow mb-2">Size</legend>
             <div className="grid grid-cols-3">
-              {sizes.map((s) => (
-                <label key={s.sizeMl} className="block">
-                  <input
-                    type="radio"
-                    name={`size-${panelId}`}
-                    value={s.sizeMl}
-                    checked={sizeMl === s.sizeMl}
-                    onChange={() => setSizeMl(s.sizeMl)}
-                    className="peer sr-only"
-                  />
+              {SIZES_ML.map((size) => (
+                <label key={size} className="block">
+                  <input type="radio" name={`size-${panelId}`} value={size} checked={sizeMl === size} onChange={() => setSizeMl(size)} className="peer sr-only" />
                   <span className="flex min-h-11 cursor-pointer items-center justify-center border border-border font-display text-xs font-medium tracking-[0.1em] peer-checked:border-btn peer-checked:bg-btn peer-checked:text-btn-text peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-secondary">
-                    {s.sizeMl}ml
+                    {size}ml
                   </span>
                 </label>
               ))}
@@ -168,12 +129,7 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
             </div>
           </div>
 
-          <button
-            type="button"
-            disabled={!available}
-            onClick={() => setStatus(add({ productId: id, sizeMl, qty }) ? "added" : "full")}
-            className="btn btn-primary w-full"
-          >
+          <button type="button" disabled={!available} onClick={() => setStatus(add({ productId: id, sizeMl, qty }) ? "added" : "full")} className="btn btn-primary w-full">
             {status === "added" ? "Added to cart" : "Add to cart"}
           </button>
           <p role="status" className={status === "full" ? "small text-error" : "sr-only"}>

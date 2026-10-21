@@ -1,3 +1,4 @@
+import { clientIp } from "@/lib/ip";
 import { createOrder, OrderError } from "@/lib/orders";
 import { orderInputSchema } from "@/lib/schemas";
 
@@ -6,7 +7,7 @@ export async function POST(request: Request) {
   if (!input.success) {
     return Response.json({ error: "invalid", message: "Please check your details and try again." }, { status: 400 });
   }
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+  const ip = clientIp(request.headers);
   try {
     return Response.json(await createOrder(input.data, ip));
   } catch (error) {

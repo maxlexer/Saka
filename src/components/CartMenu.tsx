@@ -3,20 +3,19 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useActiveOrder, useCart } from "@/lib/cart";
-import { computeTotals, formatUsd, priceOf } from "@/lib/pricing";
-import type { CartCatalogItem } from "@/lib/sanity";
+import type { CartCatalog } from "@/lib/catalog";
+import { computeTotals, formatUsd } from "@/lib/pricing";
 import { CartIcon, CloseIcon, MinusIcon, PlusIcon } from "./Icons";
 import { Modal } from "./Modal";
 
-export function CartMenu({ catalog }: { catalog: CartCatalogItem[] }) {
+export function CartMenu({ catalog }: { catalog: CartCatalog }) {
   const { lines, setQty } = useCart();
   const activeOrder = useActiveOrder();
   const [open, setOpen] = useState(false);
 
   const rows = (lines ?? []).map((line) => {
-    const product = catalog.find((p) => p.id === line.productId);
-    const price = product && priceOf(product.sizes, line.sizeMl);
-    return { line, name: product?.name, price };
+    const name = catalog.names[line.productId];
+    return { line, name, price: name ? catalog.prices[line.sizeMl] : undefined };
   });
   const priced = rows.flatMap((r) => (r.price === undefined ? [] : [{ priceUsd: r.price, qty: r.line.qty }]));
   const { subtotalUsd } = computeTotals(priced, "pickup");

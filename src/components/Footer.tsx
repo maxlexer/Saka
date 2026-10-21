@@ -1,20 +1,20 @@
+import { STORE } from "@/lib/store";
 import { socialIcon } from "./Icons";
 import { Logo } from "./Logo";
-import type { SiteSettings } from "@/lib/sanity";
 
-export function Footer({ settings }: { settings: SiteSettings }) {
+export function Footer() {
   return (
     <footer className="border-t border-border bg-surface">
       <div className="wrap flex flex-col items-center gap-6 py-14 text-center">
         <Logo className="h-14 w-auto" />
         <p className="small text-muted">Fragrance from Cambodia.</p>
         <p className="small max-w-[62ch] text-muted">
-          {settings.address}
-          {settings.phone && <> &middot; <a className="link" href={`tel:${settings.phone.replace(/\s/g, "")}`}>{settings.phone}</a></>}
+          {STORE.address}
+          {STORE.phone && <> &middot; <a className="link" href={`tel:${STORE.phone.replace(/\s/g, "")}`}>{STORE.phone}</a></>}
         </p>
-        {settings.socialLinks.length > 0 && (
+        {STORE.socialLinks.length > 0 && (
           <ul className="flex gap-2">
-            {settings.socialLinks.map(({ label, url }) => {
+            {STORE.socialLinks.map(({ label, url }) => {
               const Icon = socialIcon(label);
               return (
                 <li key={url}>
@@ -26,7 +26,7 @@ export function Footer({ settings }: { settings: SiteSettings }) {
             })}
           </ul>
         )}
-        <p className="small text-muted">&copy; {new Date().getFullYear()} {settings.storeName}</p>
+        <p className="small text-muted">&copy; {new Date().getFullYear()} {STORE.name}</p>
       </div>
     </footer>
   );

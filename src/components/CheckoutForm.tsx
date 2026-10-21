@@ -5,16 +5,16 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { setActiveOrder, useActiveOrder, useCart } from "@/lib/cart";
 import { EMPTY_DRAFT, loadDraft, saveDraft, submitOrder, type Draft } from "@/lib/checkout-client";
-import { computeTotals, DELIVERY_FEE_USD, formatUsd, priceOf } from "@/lib/pricing";
-import type { CartCatalogItem } from "@/lib/sanity";
+import type { CartCatalog } from "@/lib/catalog";
+import { computeTotals, DELIVERY_FEE_USD, formatUsd } from "@/lib/pricing";
 import { detailsSchema } from "@/lib/schemas";
+import { STORE } from "@/lib/store";
 import { AlertIcon } from "./Icons";
 import { CheckoutSkeleton } from "./Skeletons";
 
-type Props = { catalog: CartCatalogItem[]; address: string };
+type Props = { catalog: CartCatalog };
 type Errors = Record<string, string>;
 
-const input = "min-h-11 w-full rounded-sm border border-border bg-surface px-3 focus:border-secondary";
 
 function check(draft: Draft) {
   const parsed = detailsSchema.safeParse(draft);
@@ -37,7 +37,7 @@ function Field({ id, label, error, children }: { id: string; label: string; erro
   );
 }
 
-export function CheckoutForm({ catalog, address }: Props) {
+export function CheckoutForm({ catalog }: Props) {
   const router = useRouter();
   const { lines } = useCart();
   const activeOrder = useActiveOrder();
@@ -64,8 +64,8 @@ export function CheckoutForm({ catalog, address }: Props) {
   const delivery = draft.fulfilment === "delivery";
 
   const rows = (lines ?? []).map((line) => {
-    const product = catalog.find((p) => p.id === line.productId);
-    return { line, name: product?.name ?? "Unavailable item", price: product ? priceOf(product.sizes, line.sizeMl) : undefined };
+    const name = catalog.names[line.productId];
+    return { line, name: name ?? "Unavailable item", price: name ? catalog.prices[line.sizeMl] : undefined };
   });
   const totals = computeTotals(rows.flatMap((r) => (r.price === undefined ? [] : [{ priceUsd: r.price, qty: r.line.qty }])), draft.fulfilment);
 
@@ -113,10 +113,10 @@ export function CheckoutForm({ catalog, address }: Props) {
       <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
         <form onSubmit={onSubmit} noValidate className="space-y-6">
           <Field id="name" label="Name" error={errors.name}>
-            <input id="name" autoComplete="name" value={draft.name} onChange={(e) => set({ name: e.target.value })} {...described("name")} className={input} />
+            <input id="name" autoComplete="name" value={draft.name} onChange={(e) => set({ name: e.target.value })} {...described("name")} className="input" />
           </Field>
           <Field id="telegram" label="Telegram number" error={errors.telegram}>
-            <input id="telegram" type="tel" inputMode="tel" autoComplete="tel" value={draft.telegram} onChange={(e) => set({ telegram: e.target.value })} {...described("telegram")} className={input} />
+            <input id="telegram" type="tel" inputMode="tel" autoComplete="tel" value={draft.telegram} onChange={(e) => set({ telegram: e.target.value })} {...described("telegram")} className="input" />
           </Field>
 
           <fieldset>
@@ -135,11 +135,11 @@ export function CheckoutForm({ catalog, address }: Props) {
 
           {delivery ? (
             <Field id="mapUrl" label="Google Maps link" error={errors.mapUrl}>
-              <input id="mapUrl" type="url" inputMode="url" value={draft.mapUrl} onChange={(e) => set({ mapUrl: e.target.value })} placeholder="https://maps.app.goo.gl/..." {...described("mapUrl")} className={input} />
+              <input id="mapUrl" type="url" inputMode="url" value={draft.mapUrl} onChange={(e) => set({ mapUrl: e.target.value })} placeholder="https://maps.app.goo.gl/..." {...described("mapUrl")} className="input" />
               <p className="small mt-2 text-muted">Share your location in Google Maps and paste the link. Delivery adds {formatUsd(DELIVERY_FEE_USD)}.</p>
             </Field>
           ) : (
-            <p className="small text-muted">Pick up in the shop, free of charge. {address}</p>
+            <p className="small text-muted">Pick up in the shop, free of charge. {STORE.address}</p>
           )}
 
           <p className="small text-muted">We use your name and number only to prepare your order.</p>

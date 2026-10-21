@@ -4,16 +4,12 @@ import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
 import { ProductGrid } from "@/components/ProductGrid";
 import { VisitUs } from "@/components/VisitUs";
-import { getCatalog, getSettings } from "@/lib/sanity";
+import { EMPTY_CATALOG, getCatalog } from "@/lib/catalog";
 
-export const revalidate = 60;
+export const revalidate = 300;
 
 export default async function HomePage() {
-  const [products, settings] = await Promise.all([getCatalog(), getSettings()]);
-  const stockDate = settings.stockUpdatedAt
-    ? new Intl.DateTimeFormat("en-GB", { dateStyle: "long", timeZone: "Asia/Phnom_Penh" }).format(new Date(settings.stockUpdatedAt))
-    : null;
-
+  const { products, prices } = await getCatalog().catch(() => EMPTY_CATALOG);
   return (
     <>
       <Hero />
@@ -21,14 +17,14 @@ export default async function HomePage() {
         <FadeUp className="wrap text-center">
           <p className="eyebrow">In store now</p>
           <h2 id="collection-title" className="h2 mt-3">On our shelves today</h2>
-          <p className="mt-4 text-muted">{stockDate ? `Stock as of ${stockDate}. ` : ""}Visit us to try any scent.</p>
-          <ProductGrid products={products.slice(0, 6)} eager={0} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
+          <p className="mt-4 text-muted">Visit us to try any scent.</p>
+          <ProductGrid products={products.slice(0, 6)} prices={prices} eager={0} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
           <Link href="/products" className="link tap mt-10 inline-flex items-center gap-2 font-display text-[13px] font-medium uppercase tracking-[0.16em]">
             View products <ArrowIcon width={18} height={18} />
           </Link>
         </FadeUp>
       </section>
-      <FadeUp><VisitUs settings={settings} /></FadeUp>
+      <FadeUp><VisitUs /></FadeUp>
     </>
   );
 }

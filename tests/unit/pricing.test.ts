@@ -1,19 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { computeTotals, formatUsd, priceOf } from "@/lib/pricing";
+import { computeTotals, formatUsd } from "@/lib/pricing";
 
 describe("formatters", () => {
   it("formats USD with two decimals, or compact for whole amounts", () => {
     expect(formatUsd(18)).toBe("$18.00");
     expect(formatUsd(18, true)).toBe("$18");
     expect(formatUsd(18.5, true)).toBe("$18.50");
-  });
-});
-
-describe("priceOf", () => {
-  it("finds the price for a size", () => {
-    const sizes = [{ sizeMl: 10, priceUsd: 12 }, { sizeMl: 20, priceUsd: 22 }];
-    expect(priceOf(sizes, 20)).toBe(22);
-    expect(priceOf(sizes, 50)).toBeUndefined();
   });
 });
 

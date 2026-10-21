@@ -1,29 +1,39 @@
 import { expect, type Page } from "@playwright/test";
+import { CATALOG, OUT_OF_STOCK, seedCatalog } from "../seed";
 
 const MOCK = "http://127.0.0.1:4010";
-const sb = () => ({
-  url: process.env.SUPABASE_URL ?? "",
-  headers: { apikey: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "", authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""}`, "content-type": "application/json" },
-});
+const SB_URL = process.env.SUPABASE_URL || MOCK;
+const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "mock";
+const sbHeaders = { apikey: SB_KEY, authorization: `Bearer ${SB_KEY}`, "content-type": "application/json" };
+
+const byslug = (slug: string) => {
+  const product = CATALOG.products.find((p) => p.slug === slug);
+  if (!product) throw new Error(`unknown slug ${slug}`);
+  return { slug, name: product.name };
+};
+export const FIRST = byslug(CATALOG.products[0].slug);
+export const SOLD_OUT = byslug(OUT_OF_STOCK);
 
 const post = (path: string, body: unknown = {}) => fetch(`${MOCK}${path}`, { method: "POST", body: JSON.stringify(body) });
 
 export const mock = {
   reset: () => post("/__mock/reset"),
   pay: async (amount?: number) => (await (await post("/__mock/pay", { amount })).json()) as { md5: string },
-  stock: (id: string, available: boolean) => post("/__mock/stock", { id, available }),
   messages: async () => (await (await fetch(`${MOCK}/__mock/messages`)).json()) as { chat_id: number | string; text: string }[],
 };
 
+/** Changes live data only. Cached pages keep their old copy until an admin save or the revalidate window. */
+export const setAvailable = (slug: string, available: boolean) =>
+  fetch(`${SB_URL}/rest/v1/products?slug=eq.${slug}`, { method: "PATCH", headers: sbHeaders, body: JSON.stringify({ available }) });
+
 export async function resetAll() {
   await mock.reset();
-  const { url, headers } = sb();
-  await fetch(`${url}/rest/v1/orders?id=not.is.null`, { method: "DELETE", headers });
+  await seedCatalog(SB_URL, SB_KEY);
+  await fetch(`${SB_URL}/rest/v1/orders?id=not.is.null`, { method: "DELETE", headers: sbHeaders });
 }
 
 export async function expireOrders() {
-  const { url, headers } = sb();
-  await fetch(`${url}/rest/v1/orders?id=not.is.null`, { method: "PATCH", headers, body: JSON.stringify({ expires_at: new Date(Date.now() - 60_000).toISOString() }) });
+  await fetch(`${SB_URL}/rest/v1/orders?id=not.is.null`, { method: "PATCH", headers: sbHeaders, body: JSON.stringify({ expires_at: new Date(Date.now() - 60_000).toISOString() }) });
 }
 
 export async function addFirstProduct(page: Page) {

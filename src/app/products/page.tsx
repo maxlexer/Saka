@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ProductGrid } from "@/components/ProductGrid";
-import { getCatalog } from "@/lib/sanity";
+import { getCatalog } from "@/lib/catalog";
 
-export const revalidate = 60;
+export const revalidate = 300;
 export const metadata = { title: "Products | SAKA Parfum" };
 
 export default async function ProductsPage() {
-  const products = await getCatalog();
+  const { products, prices } = await getCatalog();
   return (
     <section aria-labelledby="products-title" className="section">
       <div className="wrap text-center">
@@ -17,7 +17,7 @@ export default async function ProductsPage() {
             Our shelves are being restocked. <Link href="/#visit" className="link text-text">Visit us</Link> or message us for what is new.
           </p>
         ) : (
-          <ProductGrid products={products} className="mt-10" />
+          <ProductGrid products={products} prices={prices} className="mt-10" />
         )}
       </div>
     </section>

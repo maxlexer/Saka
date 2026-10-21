@@ -6,10 +6,10 @@ const PALETTE = new Set([
   "#faf6ee", "#f2ebdf", "#dcd0bf", "#ad9883", "#8c7964", "#685846", "#171a12", "#393625",
   "#4f6b3a", "#a3392b", "#23261c", "#3a3a2c", "#f5efe4", "#bdae9b", "#8fb174", "#e07a6a",
 ]);
-const ROOTS = ["src", "scripts", "sanity", "tests", "supabase", "README.md"];
+const ROOTS = ["src", "scripts", "tests", "supabase", "README.md"];
 const EXTS = new Set([".ts", ".tsx", ".css", ".mjs", ".sql", ".md"]);
 const SKIP = new Set(["tests/unit/check-copy.test.ts"]);
-const SKIP_DIRS = new Set(["dist", ".sanity", "node_modules"]);
+const SKIP_DIRS = new Set(["dist", "node_modules"]);
 
 export function findViolations(file: string, text: string): string[] {
   const out: string[] = [];

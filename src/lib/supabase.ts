@@ -103,3 +103,14 @@ export async function cleanup() {
 export async function ping() {
   ok(await db().from("orders").select("id").limit(1));
 }
+
+const PRODUCT_COLUMNS = "slug, name, family, description, notes_top, notes_heart, notes_base, mood, occasion, vibes, occasions, available, sort";
+
+export async function listProducts(slugs?: string[]) {
+  const query = db().from("products").select(PRODUCT_COLUMNS).order("sort");
+  return ok(await (slugs ? query.in("slug", slugs) : query)) as unknown[];
+}
+
+export async function listPrices() {
+  return ok(await db().from("size_prices").select("size_ml, price_usd")) as unknown[];
+}

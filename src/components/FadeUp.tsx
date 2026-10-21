@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, type ReactNode } from "react";
-import { gsap, useGSAP } from "@/lib/gsap";
+import { gsap, MOTION, useGSAP } from "@/lib/gsap";
 
 export function FadeUp({ children, className }: { children: ReactNode; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -16,7 +16,7 @@ export function FadeUp({ children, className }: { children: ReactNode; className
         const observer = new IntersectionObserver(
           ([entry]) => {
             if (!entry.isIntersecting) return;
-            gsap.to(el, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" });
+            gsap.to(el, { opacity: 1, y: 0, ...MOTION.enter });
             observer.disconnect();
           },
           { threshold: 0.15 },

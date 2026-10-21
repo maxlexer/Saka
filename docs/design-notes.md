@@ -80,3 +80,21 @@ Brief wins:
 - The summary panel is a flat surface tile with a 1px border, no shadow.
 - The QR is #171A12 on #FAF6EE inside a bordered cream tile, in both themes, so it always scans.
 - The paid popup uses the single permitted soft shadow, and it opens only after payment, never on first load.
+
+## R2 tokens and theme
+
+Queries: theme toggle header accessible, modal dialog backdrop transition (both `--domain ux`). GSAP core, timeline, react and performance guidance loaded before the motion code.
+
+Accepted:
+- The theme switch is a real button with a fixed accessible name ("Dark mode") and `aria-pressed` for its state, so the name never flips with the icon.
+- Every control inside a dialog keeps a visible focus ring.
+- Motion never decides state: the theme attribute and the dialog open state are set directly, the fade only decorates.
+- GSAP animates transform and opacity only, every animation sits inside `gsap.matchMedia()` with a reduced-motion branch, and tweens created after mount go through `contextSafe`.
+
+Rejected:
+- A sun and moon slider pill in the header. Pills are off-brand, and an icon button is quieter.
+- Following the device dark mode. The redesign wants light for everyone until they choose.
+
+Brief wins:
+- The backdrop is a soft #171A12 at 30 percent, faded with CSS because GSAP cannot reach `::backdrop`.
+- Cards, the drawer, dialogs and admin panels use the 8px `rounded-card`; buttons and inputs keep 4px.

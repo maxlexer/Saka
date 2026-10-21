@@ -8,7 +8,7 @@ import { SIZES_ML } from "@/lib/taxonomy";
 export function PricesForm({ prices }: { prices: SizePrices }) {
   const [state, action, pending] = useActionState<FormState, FormData>(savePrices, null);
   return (
-    <form action={action} className="mt-8 rounded-[8px] border border-border bg-surface p-6">
+    <form action={action} className="mt-8 rounded-card border border-border bg-surface p-6">
       <h2 className="h3">Prices</h2>
       <p className="small mt-2 text-muted">One price per size, used for every perfume.</p>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">

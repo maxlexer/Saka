@@ -4,6 +4,7 @@ import { CartMenu } from "./CartMenu";
 import { Logo } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
 import { NAV } from "./nav";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Header({ catalog }: { catalog: CartCatalog }) {
   return (
@@ -20,6 +21,7 @@ export function Header({ catalog }: { catalog: CartCatalog }) {
           ))}
         </nav>
         <div className="flex items-center">
+          <ThemeToggle />
           <CartMenu catalog={catalog} />
           <MobileMenu />
         </div>

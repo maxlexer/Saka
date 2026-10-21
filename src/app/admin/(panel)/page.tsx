@@ -17,7 +17,7 @@ export default async function AdminProductsPage() {
       {SCENT_FAMILIES.map((family) => (
         <section key={family} aria-labelledby={`family-${family}`} className="mt-8">
           <h3 id={`family-${family}`} className="eyebrow">{LABELS[family]}</h3>
-          <ul className="mt-3 divide-y divide-border rounded-[8px] border border-border bg-surface">
+          <ul className="mt-3 divide-y divide-border rounded-card border border-border bg-surface">
             {products
               .filter((p) => p.family === family)
               .map((p) => (

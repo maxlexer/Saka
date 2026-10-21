@@ -14,22 +14,23 @@
   --btn-text: #faf6ee;
   --badge: #ad9883;
   --ink: #171a12;
+  --contact: rgba(23, 26, 18, 0.18);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #171a12;
-    --surface: #23261c;
-    --border: #3a3a2c;
-    --text: #f5efe4;
-    --muted: #bdae9b;
-    --secondary: #ad9883;
-    --accent: #8c7964;
-    --success: #8fb174;
-    --error: #e07a6a;
-    --btn: #f5efe4;
-    --btn-text: #171a12;
-  }
+/* Dark only when the visitor chose it with the header switch. Set before paint by the head script. */
+:root[data-theme="dark"] {
+  --bg: #171a12;
+  --surface: #23261c;
+  --border: #3a3a2c;
+  --text: #f5efe4;
+  --muted: #bdae9b;
+  --secondary: #ad9883;
+  --accent: #8c7964;
+  --success: #8fb174;
+  --error: #e07a6a;
+  --btn: #f5efe4;
+  --btn-text: #171a12;
+  --contact: rgba(23, 26, 18, 0.6);
 }
 
 @theme inline {
@@ -49,6 +50,7 @@
   --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
   --radius-sm: 4px;
+  --radius-card: 8px;
   --shadow-soft: 0 8px 24px rgba(23, 26, 18, 0.08);
 }
 
@@ -139,6 +141,12 @@ button:not(:disabled) { cursor: pointer; }
   .tap { position: relative; }
   .tap::before { content: ""; position: absolute; inset: -12px -8px; }
 
+  .card-title {
+    font-family: var(--font-display); text-transform: uppercase; font-weight: 500;
+    font-size: 13px; line-height: 1.4; letter-spacing: 0.08em;
+  }
+  @media (min-width: 1024px) { .card-title { font-size: 15px; } }
+
   .skeleton { background: var(--surface); }
   .skip-link {
     position: absolute; left: 16px; top: -100px; z-index: 100; padding: 12px 16px;
@@ -147,11 +155,25 @@ button:not(:disabled) { cursor: pointer; }
   .skip-link:focus { top: 16px; }
 }
 
+/* The native backdrop cannot be reached by GSAP, so it fades with CSS. */
+dialog::backdrop {
+  background: rgba(23, 26, 18, 0);
+  transition: background-color 500ms ease, overlay 500ms ease allow-discrete, display 500ms ease allow-discrete;
+}
+dialog[open]::backdrop { background: rgba(23, 26, 18, 0.3); }
+@starting-style { dialog[open]::backdrop { background: rgba(23, 26, 18, 0); } }
+
+@media (prefers-reduced-motion: no-preference) {
+  html.theme-fade, html.theme-fade * {
+    transition: background-color 500ms ease, color 500ms ease, border-color 500ms ease !important;
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .skeleton { animation: skeleton-pulse 1.8s ease-in-out infinite; }
 }
 @keyframes skeleton-pulse { 50% { opacity: 0.55; } }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  *, *::before, *::after, ::backdrop { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }

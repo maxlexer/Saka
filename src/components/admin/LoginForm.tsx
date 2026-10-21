@@ -6,7 +6,7 @@ import { login, type FormState } from "@/app/admin/actions";
 export function LoginForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(login, null);
   return (
-    <form action={action} className="mt-8 space-y-6 rounded-[8px] border border-border bg-surface p-6">
+    <form action={action} className="mt-8 space-y-6 rounded-card border border-border bg-surface p-6">
       <div>
         <label htmlFor="password" className="eyebrow mb-2 block">Password</label>
         <input

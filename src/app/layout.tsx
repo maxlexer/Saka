@@ -3,6 +3,7 @@ import { Jost, Montserrat } from "next/font/google";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { EMPTY_CATALOG, getCatalog, toCartCatalog } from "@/lib/catalog";
+import { HEAD_SCRIPT } from "@/lib/head-script";
 import "./globals.css";
 
 const montserrat = Montserrat({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-montserrat", display: "swap" });
@@ -14,7 +15,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Cached pages throw on a failed read and keep their last good copy. Only uncached pages fall back here.
   const catalog = await getCatalog().catch(() => EMPTY_CATALOG);
   return (
-    <html lang="en" className={`${montserrat.variable} ${jost.variable}`}>
+    <html lang="en" className={`${montserrat.variable} ${jost.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: HEAD_SCRIPT }} />
+      </head>
       <body className="flex min-h-dvh flex-col">
         <a href="#main" className="skip-link">Skip to content</a>
         <Header catalog={toCartCatalog(catalog)} />

@@ -29,7 +29,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       <h1 className="h2 mt-10">Transactions</h1>
       <dl className="mt-8 grid gap-4 sm:grid-cols-2">
         {cards.map(({ label, list }) => (
-          <div key={label} className="rounded-[8px] border border-border bg-surface p-6">
+          <div key={label} className="rounded-card border border-border bg-surface p-6">
             <dt className="eyebrow">{label}</dt>
             <dd className="h2 mt-3">{formatUsd(sum(list))}</dd>
             <dd className="small mt-1 text-muted">{list.length} paid {list.length === 1 ? "order" : "orders"}</dd>
@@ -42,7 +42,7 @@ export default async function TransactionsPage({ searchParams }: { searchParams:
       ) : (
         <ul className="mt-10 space-y-4">
           {rows.map((o) => (
-            <li key={o.id} className="rounded-[8px] border border-border bg-surface p-5">
+            <li key={o.id} className="rounded-card border border-border bg-surface p-5">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <p className="h3">{orderNumber(o.order_number)}</p>
                 <p className="small text-muted">{phnomPenhTime(o.paid_at)}</p>

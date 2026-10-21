@@ -10,7 +10,7 @@ export function Header({ catalog }: { catalog: CartCatalog }) {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-surface">
       <div className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-5 lg:h-[72px] lg:px-8">
-        <Link href="/" aria-label="SAKA Parfum, home">
+        <Link href="/" aria-label="SAKA Parfum, home" className="flex h-11 items-center">
           <Logo showParfum={false} className="h-5 w-auto lg:h-6" />
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-10 lg:flex">

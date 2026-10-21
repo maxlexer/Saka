@@ -54,4 +54,8 @@ describe("selection helpers", () => {
     expect(parseSelection(new URLSearchParams("?vibe=calm,nonsense&family=woody"))).toEqual({ vibes: ["calm"], occasions: [], families: ["woody"] });
     expect(selectionToQuery(EMPTY_SELECTION)).toBe("");
   });
+  it("keeps other parameters and drops emptied groups", () => {
+    expect(selectionToQuery({ ...EMPTY_SELECTION, families: ["woody"] }, "?vibe=calm&utm_source=ig&scent=aventus")).toBe("?utm_source=ig&scent=aventus&family=woody");
+    expect(selectionToQuery(EMPTY_SELECTION, "?vibe=calm&utm_source=ig")).toBe("?utm_source=ig");
+  });
 });

@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: { default: title, template: "%s | SAKA Parfum" },
   description,
-  alternates: { canonical: "/" },
   openGraph: { type: "website", siteName: "SAKA Parfum", title, description, images: [{ url: "/og.png", width: 1200, height: 630, alt: "SAKA Parfum" }] },
   twitter: { card: "summary_large_image", title, description, images: ["/og.png"] },
 };

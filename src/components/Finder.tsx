@@ -19,12 +19,13 @@ const GRID = "[&_a]:bg-bg";
 export function Finder({ products }: { products: Product[] }) {
   const [sel, setSel] = useState<Selection>(EMPTY_SELECTION);
   const results = useRef<HTMLDivElement>(null);
+  const chips = useRef<HTMLDivElement>(null);
 
   useEffect(() => setSel(parseSelection(new URLSearchParams(window.location.search))), []);
 
   const change = (next: Selection) => {
     setSel(next);
-    window.history.replaceState(null, "", `${window.location.pathname}${selectionToQuery(next)}${window.location.hash}`);
+    window.history.replaceState(null, "", `${window.location.pathname}${selectionToQuery(next, window.location.search)}${window.location.hash}`);
   };
 
   const { matches, close } = findMatches(products, sel);
@@ -47,7 +48,7 @@ export function Finder({ products }: { products: Product[] }) {
       <p className="eyebrow">Scent finder</p>
       <h2 id="finder-title" className="h2 mt-3">Tell us how you want to feel</h2>
 
-      <div className="mx-auto mt-10 max-w-3xl space-y-8">
+      <div ref={chips} className="mx-auto mt-10 max-w-3xl space-y-8">
         {GROUPS.map(({ key, title, values }) => (
           <div key={key} role="group" aria-labelledby={`finder-${key}`}>
             <h3 id={`finder-${key}`} className="eyebrow mb-3">{title}</h3>
@@ -79,7 +80,11 @@ export function Finder({ products }: { products: Product[] }) {
         {/* Kept in the layout while hidden, so the line above never shifts. */}
         <button
           type="button"
-          onClick={() => change(EMPTY_SELECTION)}
+          onClick={() => {
+            change(EMPTY_SELECTION);
+            // This button hides itself, so focus moves to the first chip instead of falling to the page.
+            chips.current?.querySelector("button")?.focus();
+          }}
           className={`link tap font-display text-[13px] font-medium uppercase tracking-[0.16em] ${empty ? "invisible" : ""}`}
         >
           Clear all
@@ -87,11 +92,11 @@ export function Finder({ products }: { products: Product[] }) {
       </div>
 
       <div ref={results}>
-        {matches.length > 0 && <ProductGrid products={matches} eager={0} className={`mt-10 ${GRID}`} />}
+        {matches.length > 0 && <ProductGrid products={matches} className={`mt-10 ${GRID}`} />}
         {close.length > 0 && (
           <>
             <h3 className="h3 mt-12">Close matches</h3>
-            <ProductGrid products={close} eager={0} className={`mt-8 ${GRID}`} />
+            <ProductGrid products={close} className={`mt-8 ${GRID}`} />
           </>
         )}
       </div>

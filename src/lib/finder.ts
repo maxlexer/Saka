@@ -42,17 +42,21 @@ export function findMatches(products: Product[], sel: Selection) {
 const pick = <T extends string>(raw: string | null, allowed: readonly T[]) =>
   (raw ?? "").split(",").filter((value): value is T => (allowed as readonly string[]).includes(value));
 
+const PARAMS = { vibes: "vibe", occasions: "occasion", families: "family" } as const;
+
 export const parseSelection = (params: URLSearchParams): Selection => ({
-  vibes: pick(params.get("vibe"), VIBES),
-  occasions: pick(params.get("occasion"), OCCASIONS),
-  families: pick(params.get("family"), SCENT_FAMILIES),
+  vibes: pick(params.get(PARAMS.vibes), VIBES),
+  occasions: pick(params.get(PARAMS.occasions), OCCASIONS),
+  families: pick(params.get(PARAMS.families), SCENT_FAMILIES),
 });
 
-export function selectionToQuery(sel: Selection) {
-  const params = new URLSearchParams();
-  if (sel.vibes.length) params.set("vibe", sel.vibes.join(","));
-  if (sel.occasions.length) params.set("occasion", sel.occasions.join(","));
-  if (sel.families.length) params.set("family", sel.families.join(","));
+/** Writes the selection into `current` (a query string), keeping every other parameter, such as an open `scent`. */
+export function selectionToQuery(sel: Selection, current = "") {
+  const params = new URLSearchParams(current);
+  for (const key of KEYS) {
+    if (sel[key].length) params.set(PARAMS[key], sel[key].join(","));
+    else params.delete(PARAMS[key]);
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }

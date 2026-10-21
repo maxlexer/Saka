@@ -14,6 +14,11 @@
 
 - `CLAUDE.md` wins any conflict. Read "Locked decisions", "Mist rules" and the GSAP section first.
 - Found in R2: GSAP 3.13 folds the CSS `translate` property (Tailwind's `-translate-x-1/2`) into its own transform and can freeze a wrong pixel value, for example while an element is hidden. Never center or offset an element GSAP will move or measure with a Tailwind translate utility. Use layout instead: a flex wrapper, or `inset-x-0 mx-auto w-fit`. The snippets below that still use `-translate-x-1/2` (the hero bottle, its skeleton and the Skip button) must be rewritten that way.
+- Found in plan 03 (read the "Plan 03" sections at the end of `docs/design-notes.md`):
+  - Initial JavaScript on `/` is 168.5KB against the 170KB budget, so R3 has about 1.5KB of first-load room. `budget.spec.ts` must stay green. Load new interactive code on intent or after the intro starts, like the mist chunk, the product modal (`ScentModal`) and the cart drawer.
+  - The `next/image` client component no longer ships. Render the floor backdrops with `getImageProps` from `next/image` in the server `Hero` (as the current hero bottle does) and plain `<img>` tags, not `<Image>`. Preload the light backdrop with `preload` from `react-dom`.
+  - `/` has no `loading.tsx` on purpose: React outlined the whole page behind the skeleton in the static HTML. Do not recreate it. Skip every step below that edits `(home)/loading.tsx`.
+  - Local Lighthouse misses performance, LCP and TBT (88, 3.36s, 260ms on `/`). The hero is the LCP element, so measure again with `npm run lighthouse` after the new hero lands, and on the Vercel preview.
 - Since the R2 review, `SpinBottle` serves its still unoptimized and has no `sizes` prop, so the card, modal, hero and intro share one cached file. Drop `sizes` from the snippets below.
 - Web design decisions go through `ui-ux-pro-max:ui-ux-pro-max` first. Load `gsap-skills:gsap-core`, `gsap-skills:gsap-timeline`, `gsap-skills:gsap-react` and `gsap-skills:gsap-performance` before animation code. Record decisions in `docs/design-notes.md`.
 - Never use em dashes anywhere. No exclamation marks in copy. Avoid the non-null assertion operator followed by a space.

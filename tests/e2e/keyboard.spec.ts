@@ -42,7 +42,7 @@ test("the mobile menu closes on Escape and restores focus", async ({ page, isMob
 });
 
 for (const path of ["/", "/products"]) {
-  test(`every interactive control on ${path} meets the 44px touch target`, async ({ page }) => {
+  test(`every interactive control on ${path} is at least 44px in both directions`, async ({ page }) => {
     await page.goto(path);
     const small = await page.evaluate(() =>
       [...document.querySelectorAll("a, button, input, select, textarea")]
@@ -53,10 +53,10 @@ for (const path of ["/", "/products"]) {
           return r.width > 0 && r.height > 0 && style.visibility !== "hidden" && !el.closest(".skip-link") && !inlineTextLink;
         })
         .filter((el) => {
-          // `.tap` widens the hit area with a pseudo element that getBoundingClientRect cannot see.
+          // `.tap` widens the hit area (12px top and bottom, 8px each side) with a pseudo element getBoundingClientRect cannot see.
           const r = el.getBoundingClientRect();
-          const extra = el.classList.contains("tap") ? 24 : 0;
-          return r.height + extra < 44 && r.width + extra < 44;
+          const tap = el.classList.contains("tap");
+          return r.height + (tap ? 24 : 0) < 44 || r.width + (tap ? 16 : 0) < 44;
         })
         .map((el) => el.outerHTML.slice(0, 80)),
     );

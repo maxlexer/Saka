@@ -1,11 +1,9 @@
 import { z } from "zod";
 import { MAX_CART_LINES, MAX_LINE_QTY, type CartLine } from "./cart-line";
 
-const sizeMlSchema = z.union([z.literal(10), z.literal(20), z.literal(50)]);
-
 const cartLineSchema = z.object({
   productId: z.string().min(1),
-  sizeMl: sizeMlSchema,
+  sizeMl: z.union([z.literal(10), z.literal(20), z.literal(50)]),
   qty: z.number().int().min(1).max(MAX_LINE_QTY),
 }) satisfies z.ZodType<CartLine>;
 

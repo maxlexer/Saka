@@ -7,7 +7,7 @@ import { MAX_LINE_QTY } from "@/lib/cart-line";
 import type { Product, SizePrices } from "@/lib/catalog";
 import { gsap, MOTION } from "@/lib/gsap";
 import { formatUsd } from "@/lib/pricing";
-import { closeScent, SCENT_PARAM, scentClosed } from "@/lib/scent-url";
+import { closeScent, SCENT_PARAM } from "@/lib/scent-url";
 import { LABELS, SIZES_ML, type SizeMl } from "@/lib/taxonomy";
 import { CloseIcon, MinusIcon, PlusIcon } from "./Icons";
 import { Modal } from "./Modal";
@@ -34,10 +34,7 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
 
   // The bottle turns once after it lands, then every few seconds while the modal is open.
   useEffect(() => {
-    if (!open) {
-      scentClosed();
-      return;
-    }
+    if (!open) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const first = window.setTimeout(() => void bottle.current?.spin(TURN_S), MOTION.glide.duration * 1000);
     const again = window.setInterval(() => void bottle.current?.spin(TURN_S), TURN_EVERY_MS);
@@ -48,11 +45,12 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
   }, [open, shown]);
 
   // Glide only from a card the visitor can see: a hidden card has an empty box, and one off screen would glide from nowhere.
-  const card = () => {
-    const el = shown ? document.querySelector(`[data-card-bottle="${shown.id}"]`) : null;
-    const box = el?.getBoundingClientRect();
-    return box && box.width > 0 && box.bottom > 0 && box.top < window.innerHeight ? el : null;
-  };
+  // A perfume can have two cards on home (the preview and a finder result), so the visible one wins.
+  const card = () =>
+    [...(shown ? document.querySelectorAll(`[data-card-bottle="${shown.id}"]`) : [])].find((el) => {
+      const box = el.getBoundingClientRect();
+      return box.width > 0 && box.bottom > 0 && box.top < window.innerHeight;
+    }) ?? null;
 
   // The dialog and its scroller clip their content, so they let the bottle overflow while it travels.
   const unclip = (tl: gsap.core.Timeline, dialog: Element | null) => {

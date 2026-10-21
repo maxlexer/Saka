@@ -14,6 +14,7 @@ import { localBusiness, SITE_URL } from "@/lib/jsonld";
 import { STORE } from "@/lib/store";
 
 export const revalidate = 300;
+export const metadata = { alternates: { canonical: "/" } };
 
 export default async function HomePage() {
   const { products, prices } = await getCatalog();
@@ -30,7 +31,7 @@ export default async function HomePage() {
           ) : (
             <>
               <p className="mt-4 text-muted">Visit us to try any scent.</p>
-              <ProductGrid products={previewPicks(products, 6)} eager={0} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
+              <ProductGrid products={previewPicks(products, 6)} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
               <Link href="/products" className="link tap mt-10 inline-flex items-center gap-2 font-display text-[13px] font-medium uppercase tracking-[0.16em]">
                 View products <ArrowIcon width={18} height={18} />
               </Link>

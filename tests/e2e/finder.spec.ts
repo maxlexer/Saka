@@ -65,3 +65,18 @@ test("a result opens the product modal and keeps the selection", async ({ page }
   await expect(page.getByRole("dialog")).toBeHidden();
   await expect(page).toHaveURL(/\?vibe=calm$/);
 });
+
+test("clear all hands focus to the first chip instead of dropping it", async ({ page }) => {
+  await page.goto("/?vibe=calm");
+  const clear = page.locator("#finder").getByRole("button", { name: "Clear all" });
+  await clear.focus();
+  await page.keyboard.press("Enter");
+  await expect(chip(page, "Vibe", "Calm")).toBeFocused();
+});
+
+test("other query parameters survive a chip change", async ({ page }) => {
+  await page.goto("/?utm_source=ig");
+  await chip(page, "Vibe", "Warm").click();
+  await expect(page).toHaveURL(/utm_source=ig/);
+  await expect(page).toHaveURL(/vibe=warm/);
+});

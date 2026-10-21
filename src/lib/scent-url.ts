@@ -11,9 +11,10 @@ function urlWith(slug: string | null) {
   return `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
 }
 
+/** A second tap before the modal code arrives replaces the entry, so one Close is always enough. */
 export function openScent(slug: string) {
+  window.history[pushed ? "replaceState" : "pushState"](null, "", urlWith(slug));
   pushed = true;
-  window.history.pushState(null, "", urlWith(slug));
 }
 
 /** Goes back when we pushed the entry, so Back and Close leave the same history. A shared link just drops the parameter. */

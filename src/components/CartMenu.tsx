@@ -1,19 +1,21 @@
 "use client";
 
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useCart } from "@/lib/cart";
 import type { CartCatalog } from "@/lib/catalog";
+import { preloader, preloadWhenIdle } from "@/lib/preload";
 import { CartIcon } from "./Icons";
 
 const load = () => import("./CartDrawer");
 const CartDrawer = lazy(() => load().then((m) => ({ default: m.CartDrawer })));
-const preload = () => void load();
+const preload = preloader(load);
 
 export function CartMenu({ catalog }: { catalog: CartCatalog }) {
   const { lines } = useCart();
   // null until first opened: the drawer code loads on intent and then stays mounted so it can animate closed.
   const [open, setOpen] = useState<boolean | null>(null);
   const count = (lines ?? []).reduce((n, l) => n + l.qty, 0);
+  useEffect(() => preloadWhenIdle(load), []);
 
   return (
     <>

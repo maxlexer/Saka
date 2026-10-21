@@ -1,11 +1,12 @@
 "use client";
 
 import { lazy, Suspense, useState } from "react";
+import { preloader } from "@/lib/preload";
 import { MenuIcon } from "./Icons";
 
 const load = () => import("./MenuDialog");
 const MenuDialog = lazy(() => load().then((m) => ({ default: m.MenuDialog })));
-const preload = () => void load();
+const preload = preloader(load);
 
 export function MobileMenu() {
   // null until first opened: the dialog code loads on intent and then stays mounted so it can animate closed.

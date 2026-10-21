@@ -15,6 +15,7 @@
   --badge: #ad9883;
   --ink: #171a12;
   --contact: rgba(23, 26, 18, 0.18);
+  color-scheme: light;
 }
 
 /* Dark only when the visitor chose it with the header switch. Set before paint by the head script. */
@@ -31,6 +32,7 @@
   --btn: #f5efe4;
   --btn-text: #171a12;
   --contact: rgba(23, 26, 18, 0.6);
+  color-scheme: dark;
 }
 
 @theme inline {
@@ -158,9 +160,10 @@ button:not(:disabled) { cursor: pointer; }
 /* The native backdrop cannot be reached by GSAP, so it fades with CSS. */
 dialog::backdrop {
   background: rgba(23, 26, 18, 0);
-  transition: background-color 500ms ease, overlay 500ms ease allow-discrete, display 500ms ease allow-discrete;
+  transition: background-color 500ms ease;
 }
 dialog[open]::backdrop { background: rgba(23, 26, 18, 0.3); }
+dialog[data-closing]::backdrop { background: rgba(23, 26, 18, 0); }
 @starting-style { dialog[open]::backdrop { background: rgba(23, 26, 18, 0); } }
 
 @media (prefers-reduced-motion: no-preference) {

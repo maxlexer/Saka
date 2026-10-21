@@ -42,12 +42,20 @@ export function Modal({ open, onClose, label, from = "fade", className = "", onS
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         if (open) {
+          delete dialog.dataset.closing;
           if (!dialog.open) dialog.showModal();
           const tl = gsap.timeline();
           tl.fromTo(dialog, { opacity: 0, ...OFFSET[from] }, { opacity: 1, x: 0, y: 0, ...MOTION.enter }, 0);
           onShow?.(tl);
         } else if (dialog.open) {
-          const tl = gsap.timeline({ onComplete: () => dialog.close() });
+          // Starts the CSS backdrop fade now, so the backdrop is gone by the time the dialog closes.
+          dialog.dataset.closing = "";
+          const tl = gsap.timeline({
+            onComplete: () => {
+              dialog.close();
+              delete dialog.dataset.closing;
+            },
+          });
           tl.to(dialog, { opacity: 0, ...OFFSET[from], ...MOTION.exit }, 0);
           onHide?.(tl);
         }
@@ -68,7 +76,8 @@ export function Modal({ open, onClose, label, from = "fade", className = "", onS
         event.preventDefault();
         onClose();
       }}
-      onClick={(event) => event.target === event.currentTarget && onClose()}
+      // detail < 2: the second click of a double click that opened the dialog must not close it.
+      onClick={(event) => event.target === event.currentTarget && event.detail < 2 && onClose()}
       className={`${BOX[from]} bg-bg p-0 text-text ${className}`}
     >
       <div className="h-full overflow-y-auto overscroll-contain">{children}</div>

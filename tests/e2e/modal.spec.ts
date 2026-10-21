@@ -73,3 +73,58 @@ test("keyboard: Enter opens, focus starts on Close, Escape closes and returns fo
   await expect(dialog).toBeHidden();
   await expect(card(page, FIRST.slug)).toBeFocused();
 });
+
+test("a perfume whose card is hidden opens without growing from a point", async ({ page, isMobile }) => {
+  test.skip(isMobile, "The fourth home pick is only hidden on desktop");
+  await page.goto("/?scent=sauvage-edt"); // fourth round robin pick, hidden on desktop
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page.waitForTimeout(150);
+  const smallestScale = await page.evaluate(() => {
+    let el = document.querySelector("dialog[open] img")?.parentElement ?? null;
+    let min = 1;
+    while (el && el.tagName !== "DIALOG") {
+      const t = getComputedStyle(el).transform;
+      if (t !== "none") min = Math.min(min, new DOMMatrix(t).a);
+      el = el.parentElement;
+    }
+    return min;
+  });
+  expect(smallestScale).toBeGreaterThan(0.5);
+});
+
+test("the backdrop fades out with the dialog instead of snapping off at the end", async ({ page }) => {
+  await page.goto(`/products?scent=${FIRST.slug}`);
+  await expect(page.getByRole("dialog", { name: FIRST.name })).toBeVisible();
+  await page.waitForTimeout(800);
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(250);
+  const backdrop = await page.evaluate(() => {
+    const dialog = document.querySelector("dialog[open]");
+    return dialog ? getComputedStyle(dialog, "::backdrop").backgroundColor : null;
+  });
+  expect(backdrop, "the dialog should still be closing").not.toBeNull();
+  const alpha = Number(backdrop?.match(/[\d.]+(?=\)$)/)?.[0] ?? 1);
+  expect(alpha).toBeLessThan(0.25);
+});
+
+test("clicking the backdrop closes the modal", async ({ page }) => {
+  await page.goto(`/products?scent=${FIRST.slug}`);
+  const dialog = page.getByRole("dialog", { name: FIRST.name });
+  await expect(dialog).toBeVisible();
+  await page.waitForTimeout(800);
+  await page.mouse.click(4, 4);
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/products$/);
+});
+
+test("with reduced motion the modal never loads a spin sprite", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const sprites: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("spin.webp")) sprites.push(request.url());
+  });
+  await page.goto(`/products?scent=${FIRST.slug}`);
+  await expect(page.getByRole("dialog", { name: FIRST.name })).toBeVisible();
+  await page.waitForTimeout(3000);
+  expect(sprites).toEqual([]);
+});

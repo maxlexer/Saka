@@ -71,21 +71,39 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
     };
   }, [open, shown]);
 
-  const card = () => (shown ? document.querySelector(`[data-card-bottle="${shown.id}"]`) : null);
+  // Glide only from a card the visitor can see: a hidden card has an empty box, and one off screen would glide from nowhere.
+  const card = () => {
+    const el = shown ? document.querySelector(`[data-card-bottle="${shown.id}"]`) : null;
+    const box = el?.getBoundingClientRect();
+    return box && box.width > 0 && box.bottom > 0 && box.top < window.innerHeight ? el : null;
+  };
+
+  // The dialog and its scroller clip their content, so they let the bottle overflow while it travels.
+  const unclip = (tl: gsap.core.Timeline, dialog: Element | null) => {
+    const clipped = dialog ? [dialog, dialog.firstElementChild] : [];
+    tl.set(clipped, { overflow: "visible" }, 0);
+    return clipped;
+  };
 
   const onShow = (tl: gsap.core.Timeline) => {
     const target = stage.current;
     if (!target) return;
-    tl.fromTo(target.closest("dialog")?.querySelectorAll("[data-reveal]") ?? [], { opacity: 0, y: 12 }, { opacity: 1, y: 0, stagger: 0.06, ...MOTION.enter }, 0.15);
+    const dialog = target.closest("dialog");
+    tl.fromTo(dialog?.querySelectorAll("[data-reveal]") ?? [], { opacity: 0, y: 12 }, { opacity: 1, y: 0, stagger: 0.06, ...MOTION.enter }, 0.15);
     const from = card();
     if (!from) return;
-    tl.set(from, { opacity: 0 }, 0).fromTo(target, flip(target, from), { x: 0, y: 0, scale: 1, ...MOTION.glide }, 0);
+    const clipped = unclip(tl, dialog);
+    // The card bottle fades while the dialog fades in, so the hand-off has no gap.
+    tl.to(from, { opacity: 0, duration: 0.3, ease: "power1.out" }, 0)
+      .fromTo(target, flip(target, from), { x: 0, y: 0, scale: 1, ...MOTION.glide }, 0)
+      .set(clipped, { clearProps: "overflow" });
   };
 
   const onHide = (tl: gsap.core.Timeline) => {
     const target = stage.current;
     const to = card();
     if (!target || !to) return;
+    unclip(tl, target.closest("dialog"));
     tl.set(to, { opacity: 0 }, 0)
       .to(target, { ...flip(target, to), ...MOTION.exit }, 0)
       .to(to, { opacity: 1, duration: 0.3, ease: "power1.out" }, MOTION.exit.duration - 0.2);
@@ -100,7 +118,7 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
           </button>
           <div className="bg-surface px-6 pb-4 pt-10 lg:p-10">
             <div ref={stage} className="mx-auto aspect-[4/5] h-[38svh] lg:h-auto lg:w-full">
-              <SpinBottle key={shown.id} ref={bottle} dir={`/products/${shown.id}`} alt={`${shown.name} bottle`} sizes="(min-width: 1024px) 440px, 60vw" float className="h-full" />
+              <SpinBottle key={shown.id} ref={bottle} dir={`/products/${shown.id}`} alt={`${shown.name} bottle`} float className="h-full" />
             </div>
           </div>
           <Details key={shown.id} product={shown} prices={prices} />

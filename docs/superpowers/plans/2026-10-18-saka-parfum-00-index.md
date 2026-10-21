@@ -8,9 +8,9 @@ Each pass is its own plan, produces working and tested software, and ends with a
 |---|---|---|---|
 | 1 | `2026-10-18-saka-parfum-01-foundation-catalog.md` | Done | Repo and tooling, tokens, fonts, logo, header, footer, catalog, cards, cart, `/products`, home, Visit us, 404, skeletons, e2e and axe baseline |
 | 2 | `2026-10-18-saka-parfum-02-checkout-payment.md` | Code done, live services pending | Supabase orders, checkout, KHQR payment with resume, settle path, webhook, Telegram messages, daily cron |
-| 3 | `2026-10-18-saka-parfum-05-r1-data-admin.md` | Code done, awaiting approval | Sanity removed, Supabase catalog (20 fixed perfumes, one price per size), USD only, one-password admin for names, availability, prices and transactions, mock PostgREST and `npm run dev:mock` |
-| 4 | `2026-10-18-saka-parfum-06-r2-storefront.md` | Next, after R1 approval | Light by default with a header theme switch, 8px cards with a floating spinning bottle and the name only, product modal with shareable `?scent=` URL, sizes, prices and the out-of-stock pill, family-grouped `/products`, sprite pipeline |
-| 5 | `2026-10-18-saka-parfum-03-finder-seo-quality.md` | Revised | Scent finder, SEO and JSON-LD, keyboard and accessibility pass, bundle budget and Lighthouse gates (read its "Redesign revision" section first) |
+| 3 | `2026-10-18-saka-parfum-05-r1-data-admin.md` | Done | Sanity removed, Supabase catalog (20 fixed perfumes, one price per size), USD only, one-password admin for names, availability, prices and transactions, mock PostgREST and `npm run dev:mock` |
+| 4 | `2026-10-18-saka-parfum-06-r2-storefront.md` | Code done, awaiting approval | Light by default with a header theme switch, 8px cards with a floating spinning bottle and the name only, product modal with shareable `?scent=` URL, sizes, prices and the out-of-stock pill, family-grouped `/products`, sprite pipeline |
+| 5 | `2026-10-18-saka-parfum-03-finder-seo-quality.md` | Next, after R2 approval | Scent finder, SEO and JSON-LD, keyboard and accessibility pass, bundle budget and Lighthouse gates (read its "Redesign revision" section first) |
 | 6 | `2026-10-18-saka-parfum-07-r3-intro-hero-mist.md` | | AI-generated floor backdrops (user approves), floor scene hero, low theme-aware mist, intro that spins the bottle and glides it onto the floor, final performance and launch checks |
 | | `2026-10-18-saka-parfum-04-intro-hero-mist.md` | Superseded | Kept only because R3 reuses its Task 2 (mist shader, math, harness, cap test) and the `Mist.tsx` code in its Task 3 Step 2 |
 

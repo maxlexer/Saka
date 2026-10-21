@@ -19,21 +19,21 @@ test("dark theme keeps the same structure and passes axe", async ({ page }) => {
 });
 
 test("axe finds no serious issues with the product modal open, in both themes", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" }); // no tweens, so contrast is measured on the final state
   for (const dark of [false, true]) {
     if (dark) await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
     await page.goto(`/products?scent=${SOLD_OUT.slug}`);
     await expect(page.getByRole("dialog", { name: SOLD_OUT.name })).toBeVisible();
-    await page.waitForTimeout(900); // let the 700ms open and 800ms glide settle before measuring contrast
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
     expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
   }
 });
 
 test("axe finds no serious issues with the cart open", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" }); // no tweens, so contrast is measured on the final state
   await page.goto("/products");
   await page.getByRole("button", { name: /Open cart/ }).click();
   await expect(page.getByRole("dialog", { name: "Cart" })).toBeVisible();
-  await page.waitForTimeout(900); // let the 700ms drawer tween finish before measuring contrast
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
   expect(violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
 });

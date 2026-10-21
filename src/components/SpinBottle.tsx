@@ -35,14 +35,13 @@ export type SpinHandle = { spin: (duration?: number) => Promise<void>; preload: 
 type Props = {
   dir: string;
   alt: string;
-  sizes: string;
   priority?: boolean;
   float?: boolean;
   className?: string;
   ref?: Ref<SpinHandle>;
 };
 
-export function SpinBottle({ dir, alt, sizes, priority = false, float = false, className = "", ref }: Props) {
+export function SpinBottle({ dir, alt, priority = false, float = false, className = "", ref }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const still = useRef<HTMLImageElement>(null);
@@ -110,7 +109,8 @@ export function SpinBottle({ dir, alt, sizes, priority = false, float = false, c
       {/* Centered by layout, not by CSS translate: GSAP folds `translate` into its own transform and can freeze a wrong value while the box is hidden. */}
       <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
         <div ref={body} className="relative aspect-[4/5] h-full">
-          <Image ref={still} src={`${dir}/still.webp`} alt={alt} fill sizes={sizes} priority={priority} className="object-contain" />
+          {/* Served as written by scripts/frames.ts, so a card, the modal and the hero share one cached file and a glide never waits on a new size. */}
+          <Image ref={still} src={`${dir}/still.webp`} alt={alt} fill priority={priority} unoptimized className="object-contain" />
           <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
         </div>
       </div>

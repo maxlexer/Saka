@@ -34,6 +34,7 @@ export const placeholderFrames = () =>
 /** One slow full turn, filmed on a plain backdrop that the color key removes. Center-cropped to 4:5. */
 async function videoFrames(file: string, key: string, similarity: string) {
   const duration = Number(execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", file]).toString().trim());
+  if (!(duration > 0)) throw new Error(`Could not read the length of ${file}`);
   const dir = await mkdtemp(join(tmpdir(), "saka-video-"));
   try {
     const filters = [`fps=${FRAMES}/${duration}`, "crop=w='min(iw,ih*4/5)':h='min(ih,iw*5/4)'", `colorkey=${key}:${similarity}:0.08`, "format=rgba"];

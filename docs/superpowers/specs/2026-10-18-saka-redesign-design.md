@@ -243,9 +243,9 @@ Runs on a plain hard load of `/` (no hash, no query, no reduced motion). The ove
 
 ## 8. Media pipeline
 
-`scripts/frames.mjs`:
+`scripts/frames.ts` (`npm run frames -- <mode>`):
 
-- `placeholder <outDir>`: writes a hatched, clearly marked placeholder still and sprite with a transparent background.
+- `placeholders`: writes a hatched, clearly marked placeholder still and sprite with a transparent background for the hero and every perfume in `supabase/seed/catalog.json`.
 - `video <file> <outDir> [--key 0x00FF00] [--similarity 0.18]`: ffprobe reads the duration, then ffmpeg cuts 36 evenly spaced frames with a `colorkey` filter. sharp writes `still.webp` (frame 0 at 960 by 1200) and `spin.webp` (6 by 6 grid of 480 by 600).
 
 Filming guidance for the owner: one slow, steady, full turn on a turntable. A plain, evenly lit backdrop in a color far from the bottle (green or blue works because it is keyed out and never shown). Fixed camera, bottle centered, frame 0 front-facing.

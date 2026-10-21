@@ -13,6 +13,8 @@
 ## Global Constraints
 
 - `CLAUDE.md` wins any conflict. Read "Locked decisions", "Mist rules" and the GSAP section first.
+- Found in R2: GSAP 3.13 folds the CSS `translate` property (Tailwind's `-translate-x-1/2`) into its own transform and can freeze a wrong pixel value, for example while an element is hidden. Never center or offset an element GSAP will move or measure with a Tailwind translate utility. Use layout instead: a flex wrapper, or `inset-x-0 mx-auto w-fit`. The snippets below that still use `-translate-x-1/2` (the hero bottle, its skeleton and the Skip button) must be rewritten that way.
+- Since the R2 review, `SpinBottle` serves its still unoptimized and has no `sizes` prop, so the card, modal, hero and intro share one cached file. Drop `sizes` from the snippets below.
 - Web design decisions go through `ui-ux-pro-max:ui-ux-pro-max` first. Load `gsap-skills:gsap-core`, `gsap-skills:gsap-timeline`, `gsap-skills:gsap-react` and `gsap-skills:gsap-performance` before animation code. Record decisions in `docs/design-notes.md`.
 - Never use em dashes anywhere. No exclamation marks in copy. Avoid the non-null assertion operator followed by a space.
 - Palette only. Mist light #F2EBDF, #DCD0BF, #AD9883, dark #23261C, #3A3A2C, #8C7964. No sparkles, no glow, no new hues. Backdrops are graded so every pixel maps onto palette tones.

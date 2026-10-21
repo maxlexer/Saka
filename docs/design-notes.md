@@ -89,7 +89,7 @@ Accepted:
 - The theme switch is a real button with a fixed accessible name ("Dark mode") and `aria-pressed` for its state, so the name never flips with the icon.
 - Every control inside a dialog keeps a visible focus ring.
 - Motion never decides state: the theme attribute and the dialog open state are set directly, the fade only decorates.
-- GSAP animates transform and opacity only, every animation sits inside `gsap.matchMedia()` with a reduced-motion branch, and tweens created after mount go through `contextSafe`.
+- GSAP animates transform and opacity only, and tweens created after mount go through `contextSafe`. Every animation sits inside `gsap.matchMedia()` with a reduced-motion branch, with one exception: the bottle spin runs on demand, so `spin()` checks `prefers-reduced-motion` itself and resolves at once without loading the sprite.
 
 Rejected:
 - A sun and moon slider pill in the header. Pills are off-brand, and an icon button is quieter.
@@ -155,3 +155,14 @@ Also for plan 03: home and /products ship their content as an outlined stream se
 - Out of stock shows only the pill: pass (modal spec: one pill, three icons, no error text).
 - Card corners 8px, buttons and inputs 4px: pass (computed styles on /products).
 - Reduced motion: pass. The modal appears at once, nothing floats and the spin sprite is never requested.
+
+## R2 code review decisions
+
+- The glide starts only from a card the visitor can see. A hidden card (home picks 4 to 6 on desktop) or one off screen has no useful box, so the modal then opens with its own fade and rise.
+- The dialog and its scroller stop clipping while the bottle travels, so it is visible the whole way from the card, then scrolling returns. A cloned bottle outside the dialog was considered and rejected as more code for the same result.
+- The card bottle fades out over 0.3s while the dialog fades in, instead of vanishing at once, so the hand-off has no gap.
+- Bottle stills are served as written by `scripts/frames.ts` (`unoptimized`). The card and the modal asked for different sizes, so the modal waited on a download mid-glide. One file per bottle is shared by every view, and the frame script already writes a tuned WebP.
+- The backdrop now fades out with the dialog: a `data-closing` attribute starts the CSS fade when the close timeline starts.
+- Card bottles have empty alt text, because the perfume name is already the link text. The modal bottle keeps its alt.
+- Dark mode sets `color-scheme: dark` so native controls and scrollbars follow.
+- Kept as they are: the size radios keep an explicit `aria-label` ("10ml, $12.00") so the name is reliable across screen readers; the card skeleton keeps two title lines because most names wrap to two; the Close button scrolls with the sheet on phones, where the backdrop strip above the sheet and Back still close it.

@@ -21,7 +21,7 @@ export function ProductCard({ product, priority = false }: { product: Product; p
       className="block h-full rounded-card border border-border bg-surface p-4 text-center transition-colors duration-500 ease-out hover:border-secondary lg:p-6"
     >
       <div data-card-bottle={product.id} className="aspect-[4/5]">
-        <SpinBottle ref={bottle} dir={`/products/${product.id}`} alt={`${product.name} bottle`} sizes="(min-width: 1024px) 340px, 45vw" priority={priority} float className="h-full" />
+        <SpinBottle ref={bottle} dir={`/products/${product.id}`} alt="" priority={priority} float className="h-full" />
       </div>
       <span className="card-title mt-4 block text-balance">{product.name}</span>
     </a>

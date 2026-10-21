@@ -113,6 +113,13 @@ button:not(:disabled) { cursor: pointer; }
   .btn-primary:not(:disabled):hover { background: transparent; color: var(--text); }
   .btn-secondary { background: transparent; color: var(--text); border-color: var(--secondary); }
   .btn-secondary:not(:disabled):hover { background: var(--btn); color: var(--btn-text); border-color: var(--btn); }
+  .chip {
+    min-height: 44px; padding: 0 16px; border: 1px solid var(--border); border-radius: 4px;
+    color: var(--text); font-size: 14px; letter-spacing: 0.02em;
+    transition: background-color 250ms ease, color 250ms ease, border-color 250ms ease;
+  }
+  .chip:hover { border-color: var(--secondary); }
+  .chip[aria-pressed="true"] { background: var(--btn); color: var(--btn-text); border-color: var(--btn); }
   .input {
     min-height: 44px; width: 100%; padding: 0 12px;
     border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);

@@ -166,3 +166,20 @@ Also for plan 03: home and /products ship their content as an outlined stream se
 - Card bottles have empty alt text, because the perfume name is already the link text. The modal bottle keeps its alt.
 - Dark mode sets `color-scheme: dark` so native controls and scrollbars follow.
 - Kept as they are: the size radios keep an explicit `aria-label` ("10ml, $12.00") so the name is reliable across screen readers; the card skeleton keeps two title lines because most names wrap to two; the Close button scrolls with the sheet on phones, where the backdrop strip above the sheet and Back still close it.
+
+## Plan 03 scent finder
+
+Queries: filter chips toggle selection, live badge count screen reader, rapid chip animation interrupted, empty state no results.
+
+Accepted:
+- Chips wrap (`flex-wrap`) and never clip into one row. Each is a real button with `aria-pressed`, 44px tall, 4px radius, selected filled with the primary.
+- One atomic status line carries the whole message ("3 scents match", or the no-match sentence), so a screen reader hears a full phrase, never a bare number. It is always in the DOM so the first change is announced.
+- No match is never a dead end: the line suggests removing one choice and close matches are listed below.
+- Results fade in with GSAP on each new result set. The previous fade is reverted first, so quick toggles never stack tweens. The selection itself updates at once.
+
+Brief wins:
+- The finder sits on the surface band between two cream sections. Its result cards switch to cream so they read as tiles on the band rather than relying on a 1px border alone.
+- Clear all stays in the layout while hidden (`invisible`), so the status line does not shift when the first chip is pressed.
+- If the catalog read fails, the page error boundary shows the shelf error, as R1 decided for cached pages. The finder has no separate disabled state. With an empty shelf the finder is not rendered.
+
+Route skeletons: `/` and `/products` no longer have a `loading.tsx`. Both are prerendered and cached, so the skeleton never covered a real wait, while its Suspense boundary made React outline the page body (over 12,800 bytes) behind the skeleton in the static HTML. The content is now in the first HTML pass for crawlers and the hero paints without a swap. Checkout and admin keep their skeletons.

@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Suspense } from "react";
+import { EmptyShelf } from "@/components/EmptyShelf";
 import { ProductGrid } from "@/components/ProductGrid";
 import { ProductModal } from "@/components/ProductModal";
 import { getCatalog } from "@/lib/catalog";
@@ -15,11 +15,7 @@ export default async function ProductsPage() {
       <div className="wrap">
         <p className="eyebrow text-center">Products</p>
         <h1 id="products-title" className="h2 mt-3 text-center">Everything on our shelves</h1>
-        {products.length === 0 ? (
-          <p className="mx-auto mt-10 max-w-[62ch] text-center text-muted">
-            Our shelves are being restocked. <Link href="/#visit" className="link text-text">Visit us</Link> or message us for what is new.
-          </p>
-        ) : (
+        {products.length === 0 ? <EmptyShelf /> : (
           SCENT_FAMILIES.map((family, index) => {
             const list = products.filter((p) => p.family === family);
             return list.length === 0 ? null : (

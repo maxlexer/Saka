@@ -1,23 +1,3 @@
-export function ProductCardSkeleton() {
-  return (
-    <div className="rounded-card border border-border bg-surface p-4 lg:p-6" aria-hidden="true">
-      <div className="skeleton aspect-[4/5] rounded-sm bg-bg" />
-      <div className="skeleton mx-auto mt-4 h-4 w-3/4" />
-      <div className="skeleton mx-auto mt-2 h-4 w-1/2" />
-    </div>
-  );
-}
-
-export function ProductGridSkeleton({ count, className = "" }: { count: number; className?: string }) {
-  return (
-    <div role="status" aria-label="Loading products" className={`grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6 ${className}`}>
-      {Array.from({ length: count }, (_, i) => (
-        <ProductCardSkeleton key={i} />
-      ))}
-    </div>
-  );
-}
-
 export function CheckoutSkeleton() {
   return (
     <div role="status" aria-label="Loading checkout" className="mt-10 grid gap-12 lg:grid-cols-[1fr_380px]">

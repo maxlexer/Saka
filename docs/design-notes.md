@@ -133,3 +133,25 @@ Brief wins:
 - Stock is one fully rounded "Out of stock" pill in ink on taupe, and a disabled Add to cart button that points at it. No icon, no red, no extra line.
 
 Found while watching it: GSAP 3.13 folds the CSS `translate` property (Tailwind's `-translate-x-1/2`) into its own transform. In the modal it did so while the dialog was still closed and froze a wrong pixel offset, so the bottle landed off center. `SpinBottle` now centers the bottle and its shadow with flex and auto margins, and GSAP only touches `y`, `scaleX` and opacity. Reduced motion checked: the modal appears at once, nothing floats, and the spin sprite is never requested.
+
+## R2 numbers
+
+Next 16 no longer prints First Load JS, so the production build was served and every script each page loads was gzipped and summed (level 9).
+
+- `/`: 205.0KB gzipped (662KB raw), 11 scripts.
+- `/products`: 213.8KB gzipped (686KB raw), 12 scripts.
+- Target: 170KB. Over by about 35 to 44KB.
+- Where it goes: about 106KB is React and Next itself, 31.6KB is Zod (the cart validates saved lines with it on the client, since pass 1), 27.6KB is GSAP, and the rest is app code. R2's own components are a small share.
+- For plan 03: dropping Zod from the client cart would bring both pages near 175KB. The budget gate there decides how.
+
+Also for plan 03: home and /products ship their content as an outlined stream segment behind the `loading.tsx` skeleton, because React outlines any boundary over 12,800 bytes (home 14.5KB, /products 38KB). An inline script swaps it in at once, so visitors see it normally, but crawlers without JavaScript see the skeleton and the hero image may paint later. Checkout is small and inlined.
+
+## R2 manual pass
+
+- Keyboard only: pass. Home tabs through header, hero button, preview cards, View products and the footer. A card opens with Enter, focus lands on Close, then sizes, quantity and Add to cart. Escape closes and returns focus to the card.
+- Theme switch on a phone: pass (theme spec on the Pixel 7 project, plus a 390px screenshot).
+- No sizes, prices or stock outside the modal, cart and checkout: pass (catalog spec checks home and /products text).
+- No Riel anywhere: pass (`usd-only` unit test).
+- Out of stock shows only the pill: pass (modal spec: one pill, three icons, no error text).
+- Card corners 8px, buttons and inputs 4px: pass (computed styles on /products).
+- Reduced motion: pass. The modal appears at once, nothing floats and the spin sprite is never requested.

@@ -1,17 +1,20 @@
 import { Suspense } from "react";
 import { EmptyShelf } from "@/components/EmptyShelf";
+import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
 import { ProductModal } from "@/components/ProductModal";
 import { getCatalog } from "@/lib/catalog";
+import { productList, SITE_URL } from "@/lib/jsonld";
 import { LABELS, SCENT_FAMILIES } from "@/lib/taxonomy";
 
 export const revalidate = 300;
-export const metadata = { title: "Products | SAKA Parfum" };
+export const metadata = { title: "Products", alternates: { canonical: "/products" } };
 
 export default async function ProductsPage() {
   const { products, prices } = await getCatalog();
   return (
     <section aria-labelledby="products-title" className="section">
+      <JsonLd data={productList(products, SITE_URL)} />
       <div className="wrap">
         <p className="eyebrow text-center">Products</p>
         <h1 id="products-title" className="h2 mt-3 text-center">Everything on our shelves</h1>

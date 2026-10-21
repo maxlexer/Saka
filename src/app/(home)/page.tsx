@@ -5,10 +5,13 @@ import { FadeUp } from "@/components/FadeUp";
 import { Finder } from "@/components/Finder";
 import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
+import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
 import { ProductModal } from "@/components/ProductModal";
 import { VisitUs } from "@/components/VisitUs";
 import { getCatalog, previewPicks } from "@/lib/catalog";
+import { localBusiness, SITE_URL } from "@/lib/jsonld";
+import { STORE } from "@/lib/store";
 
 export const revalidate = 300;
 
@@ -16,6 +19,7 @@ export default async function HomePage() {
   const { products, prices } = await getCatalog();
   return (
     <>
+      <JsonLd data={localBusiness(STORE, SITE_URL)} />
       <Hero />
       <section id="collection" aria-labelledby="collection-title" className="section">
         <FadeUp className="wrap text-center">

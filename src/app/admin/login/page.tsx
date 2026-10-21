@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/admin/LoginForm";
 import { isAdmin } from "@/lib/admin-auth";
 
-export const metadata = { title: "Admin | SAKA Parfum", robots: { index: false, follow: false } };
+export const metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 export default async function AdminLoginPage() {
   if (await isAdmin()) redirect("/admin");

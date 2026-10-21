@@ -2,7 +2,7 @@ import Link from "next/link";
 import { logout } from "../actions";
 import { requireAdmin } from "@/lib/admin-auth";
 
-export const metadata = { title: "Admin | SAKA Parfum", robots: { index: false, follow: false } };
+export const metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 const tab = "link tap font-display text-[13px] font-medium uppercase tracking-[0.16em]";
 

@@ -183,3 +183,11 @@ Brief wins:
 - If the catalog read fails, the page error boundary shows the shelf error, as R1 decided for cached pages. The finder has no separate disabled state. With an empty shelf the finder is not rendered.
 
 Route skeletons: `/` and `/products` no longer have a `loading.tsx`. Both are prerendered and cached, so the skeleton never covered a real wait, while its Suspense boundary made React outline the page body (over 12,800 bytes) behind the skeleton in the static HTML. The content is now in the first HTML pass for crawlers and the hero paints without a swap. Checkout and admin keep their skeletons.
+
+## Plan 03 keyboard and accessibility
+
+- axe (wcag2a, wcag2aa, wcag22aa) runs on `/`, `/products`, `/checkout`, `/admin/login` and the 404, in light and dark, plus the finder with close matches, the product modal and the cart. Zero serious or critical issues on desktop and mobile.
+- Native modal dialogs keep the page inert. Tab cycles the dialog's controls and the browser toolbar, never the page behind. The keyboard spec checks exactly that.
+- Touch targets: every control on `/` and `/products` is at least 44px in one direction, counting the `.tap` hit area.
+- The payment screen and Telegram popup axe check lives in `checkout.spec.ts` and runs with the other checkout specs once `.env.test` points at a Supabase test project. The local mock cannot create orders.
+- Still to do by a person: one screen reader pass (NVDA or VoiceOver) on `/`, `/products` and the payment screen. Listen for one H1 then H2 then H3, the four landmarks, the finder count and payment status announced politely, and the Telegram popup announcing its title.

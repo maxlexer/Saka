@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
 import { addFirstProduct, expireOrders, fillDetails, FIRST, mock, payAndTrigger, reachPayment, resetAll, setAvailable } from "./helpers";
 
 test.skip(({ isMobile }) => isMobile, "Payment flows run once, on desktop");
@@ -123,4 +124,16 @@ test("the Telegram route and the cron route reject missing secrets", async ({ re
   expect((await request.get("/api/cron/daily")).status()).toBe(401);
   const ok = await request.get("/api/cron/daily", { headers: { authorization: "Bearer test-cron-secret" } });
   expect(ok.status()).toBe(200);
+});
+
+const seriousIssues = async (page: Page) =>
+  (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze()).violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+
+test("axe finds no serious issues on the payment screen or with the Telegram popup open", async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await reachPayment(page, "pickup");
+  expect(await seriousIssues(page)).toEqual([]);
+  await payAndTrigger(page);
+  await expect(page.getByRole("dialog", { name: "Telegram confirmation" })).toBeVisible();
+  expect(await seriousIssues(page)).toEqual([]);
 });

@@ -63,3 +63,13 @@ export const toCartCatalog = ({ products, prices }: Catalog): CartCatalog => ({
   names: Object.fromEntries(products.map((p) => [p.id, p.name])),
   prices,
 });
+
+/** Round robin across families in shelf order, so the home preview shows the whole range. */
+export function previewPicks(products: Product[], count: number) {
+  const groups = SCENT_FAMILIES.map((family) => products.filter((p) => p.family === family && p.available));
+  const picks: Product[] = [];
+  for (let i = 0; picks.length < count && groups.some((g) => i < g.length); i++) {
+    for (const group of groups) if (group[i] && picks.length < count) picks.push(group[i]);
+  }
+  return picks;
+}

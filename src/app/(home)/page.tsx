@@ -4,12 +4,12 @@ import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
 import { ProductGrid } from "@/components/ProductGrid";
 import { VisitUs } from "@/components/VisitUs";
-import { getCatalog } from "@/lib/catalog";
+import { getCatalog, previewPicks } from "@/lib/catalog";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const { products, prices } = await getCatalog();
+  const { products } = await getCatalog();
   return (
     <>
       <Hero />
@@ -18,7 +18,7 @@ export default async function HomePage() {
           <p className="eyebrow">In store now</p>
           <h2 id="collection-title" className="h2 mt-3">On our shelves today</h2>
           <p className="mt-4 text-muted">Visit us to try any scent.</p>
-          <ProductGrid products={products.slice(0, 6)} prices={prices} eager={0} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
+          <ProductGrid products={previewPicks(products, 6)} eager={0} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
           <Link href="/products" className="link tap mt-10 inline-flex items-center gap-2 font-display text-[13px] font-medium uppercase tracking-[0.16em]">
             View products <ArrowIcon width={18} height={18} />
           </Link>

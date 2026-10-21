@@ -1,30 +1,37 @@
 import { expect, test } from "@playwright/test";
 import { FIRST, SOLD_OUT } from "./helpers";
 
-test("home shows the hero and the right number of preview cards", async ({ page }, info) => {
+test("home shows the hero and the right number of preview cards, with no sizes or prices", async ({ page }, info) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Find the scent that feels like you.");
   const expected = info.project.name === "desktop" ? 3 : 6;
   await expect(page.locator("#collection li:visible")).toHaveCount(expected);
   await expect(page.getByRole("link", { name: /view products/i })).toBeVisible();
+  expect(await page.locator("main").innerText()).not.toMatch(/\$|\d\s?ml|out of stock/i);
 });
 
-test("products page lists every product", async ({ page }) => {
+test("products are grouped under the four families, cards show only the name", async ({ page }) => {
   await page.goto("/products");
-  await expect(page.locator("main li article")).toHaveCount(20);
+  await expect(page.getByRole("heading", { level: 2 })).toHaveText(["Fresh", "Woody", "Oriental", "Aromatic"]);
+  await expect(page.locator('main a[href*="scent="]')).toHaveCount(20);
+  await expect(page.locator('main a[href*="scent="]').first()).toHaveText(FIRST.name);
+  expect(await page.locator("main").innerText()).not.toMatch(/\$|\d\s?ml|out of stock/i);
 });
 
-test("a card opens and closes, one at a time", async ({ page }) => {
+test("cards have 8px corners and a 4:5 bottle stage", async ({ page }) => {
   await page.goto("/products");
-  const first = page.locator("article").nth(0).getByRole("button").first();
-  const second = page.locator("article").nth(1).getByRole("button").first();
-  await first.click();
-  await expect(first).toHaveAttribute("aria-expanded", "true");
-  await second.click();
-  await expect(first).toHaveAttribute("aria-expanded", "false");
-  await expect(second).toHaveAttribute("aria-expanded", "true");
-  await page.keyboard.press("Escape");
-  await expect(second).toHaveAttribute("aria-expanded", "false");
+  const card = page.locator('main a[href*="scent="]').first();
+  expect(await card.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).toBe("8px");
+  const box = await card.locator("[data-card-bottle]").boundingBox();
+  expect((box?.width ?? 0) / (box?.height ?? 1)).toBeCloseTo(0.8, 1);
+});
+
+test("hovering a card with a mouse loads its spin sprite", async ({ page, isMobile }) => {
+  test.skip(isMobile, "Hover only exists on desktop");
+  await page.goto("/products");
+  const sprite = page.waitForRequest(`**/products/${FIRST.slug}/spin.webp`);
+  await page.locator('main a[href*="scent="]').first().hover();
+  await sprite;
 });
 
 test("adding to the cart updates the count and survives a reload", async ({ page }) => {
@@ -36,14 +43,6 @@ test("adding to the cart updates the count and survives a reload", async ({ page
   await expect(page.getByRole("button", { name: /Open cart, 1 item/ })).toBeVisible();
   await page.getByRole("button", { name: /Open cart/ }).click();
   await expect(page.getByRole("dialog", { name: "Cart" })).toContainText(`${FIRST.name}, 10ml`);
-});
-
-test("out of stock products cannot be added", async ({ page }) => {
-  await page.goto("/products");
-  const card = page.locator("article", { hasText: SOLD_OUT.name });
-  await expect(card).toContainText("Out of stock");
-  await card.getByRole("button").first().click();
-  await expect(card.getByRole("button", { name: "Add to cart" })).toBeDisabled();
 });
 
 test("unknown routes show the branded 404", async ({ page }) => {

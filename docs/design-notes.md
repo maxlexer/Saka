@@ -98,3 +98,19 @@ Rejected:
 Brief wins:
 - The backdrop is a soft #171A12 at 30 percent, faded with CSS because GSAP cannot reach `::backdrop`.
 - Cards, the drawer, dialogs and admin panels use the 8px `rounded-card`; buttons and inputs keep 4px.
+
+## R2 cards and grids
+
+Queries: product card hover minimal (`--domain ux`), grid stagger reveal (`--domain gsap`).
+
+Accepted:
+- Click or tap opens the modal. The hover turn is decoration only, so touch visitors lose nothing.
+- Hover feedback is the border warming to the secondary color over 500ms, plus the pointer cursor of a link.
+
+Rejected:
+- Per-card stagger reveal with `back.out(1.4)` and a 0.92 scale. Back eases are banned, and the section fade-up already brings the grid in. Twenty cards popping one by one would be busy.
+- Card shadows and scale-up on hover. The floating bottle is the card's only motion.
+
+Brief wins:
+- Cards show the bottle and the full name only. Sizes, prices and stock live in the modal.
+- The name uses `.card-title` (13px, 15px on desktop), smaller than h3, because designer names are long and must never truncate.

@@ -1,18 +1,16 @@
 export function ProductCardSkeleton() {
   return (
-    <div className="border border-border bg-surface p-4 md:p-6" aria-hidden="true">
-      <div className="skeleton aspect-square bg-bg" />
-      <div className="skeleton mx-auto mt-5 h-6 w-3/4" />
-      <div className="skeleton mx-auto mt-3 h-4 w-full" />
-      <div className="skeleton mx-auto mt-2 h-4 w-2/3" />
-      <div className="skeleton mx-auto mt-3 h-5 w-24" />
+    <div className="rounded-card border border-border bg-surface p-4 lg:p-6" aria-hidden="true">
+      <div className="skeleton aspect-[4/5] rounded-sm bg-bg" />
+      <div className="skeleton mx-auto mt-4 h-4 w-3/4" />
+      <div className="skeleton mx-auto mt-2 h-4 w-1/2" />
     </div>
   );
 }
 
 export function ProductGridSkeleton({ count, className = "" }: { count: number; className?: string }) {
   return (
-    <div role="status" aria-label="Loading products" className={`grid grid-cols-2 items-start gap-4 lg:grid-cols-3 lg:gap-6 ${className}`}>
+    <div role="status" aria-label="Loading products" className={`grid grid-cols-2 gap-4 lg:grid-cols-3 lg:gap-6 ${className}`}>
       {Array.from({ length: count }, (_, i) => (
         <ProductCardSkeleton key={i} />
       ))}

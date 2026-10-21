@@ -1,0 +1,57 @@
+import { expect, test } from "@playwright/test";
+import { renderMist } from "../../scripts/lib/mist-harness.ts";
+import { toCanvasRect } from "../../src/lib/mist-math.ts";
+
+const VIEWPORTS = [{ width: 360, height: 740 }, { width: 768, height: 1024 }, { width: 1280, height: 800 }];
+
+test.describe("mist", () => {
+  test.skip(({ isMobile }) => isMobile, "Viewports are set explicitly below");
+
+  test("the canvas is decorative, never takes input, sits under the button and is masked low", async ({ page }) => {
+    await page.goto("/?x=1");
+    await expect(page.locator("section canvas")).toHaveCount(1);
+    const layer = page.locator("[aria-hidden=true]:has(canvas)");
+    expect(await layer.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+    expect(await layer.evaluate((el) => getComputedStyle(el).maskImage || getComputedStyle(el).webkitMaskImage)).toContain("linear-gradient");
+    const box = (await page.locator("section").first().locator("a.btn").boundingBox()) as { x: number; y: number; width: number; height: number };
+    const top = await page.evaluate(([x, y]) => document.elementFromPoint(x, y)?.closest("a")?.textContent?.trim(), [box.x + box.width / 2, box.y + box.height / 2]);
+    expect(top?.toLowerCase()).toContain("view products");
+  });
+
+  for (const viewport of VIEWPORTS) {
+    test(`the button keep-out stays clear at ${viewport.width}px wide`, async ({ page }) => {
+      await page.setViewportSize(viewport);
+      await page.goto("/?x=1");
+      const measured = await page.evaluate(() => {
+        const hero = document.querySelector("section") as HTMLElement;
+        return { hero: hero.getBoundingClientRect().toJSON(), button: (hero.querySelector("a.btn") as HTMLElement).getBoundingClientRect().toJSON() };
+      });
+      const scale = 0.5;
+      const keepA = toCanvasRect(measured.button, measured.hero, scale, 16);
+      const { stats } = await renderMist(page, { width: Math.round(measured.hero.width * scale), height: Math.round(measured.hero.height * scale), scale, boxes: { keepA } });
+      expect(stats.keepA).toBeLessThanOrEqual(1 / 255);
+    });
+  }
+
+  test("reduced motion shows the static image and no canvas", async ({ browser }) => {
+    const context = await browser.newContext({ reducedMotion: "reduce" });
+    const page = await context.newPage();
+    await page.goto("http://localhost:3100/");
+    await expect(page.locator('section img[src="/mist-static.webp"]')).toBeVisible();
+    await expect(page.locator("section canvas")).toHaveCount(0);
+    await context.close();
+  });
+
+  test("without WebGL the theme's static image appears and no error text shows", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("saka.theme", "dark");
+      const original = HTMLCanvasElement.prototype.getContext;
+      HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+        return type === "webgl2" || type === "webgl" ? null : (original as (...a: unknown[]) => unknown).call(this, type, ...args);
+      } as typeof original;
+    });
+    await page.goto("/?x=1");
+    await expect(page.locator('section img[src="/mist-static-dark.webp"]')).toBeVisible();
+    await expect(page.getByText(/webgl|error|not supported/i)).toHaveCount(0);
+  });
+});

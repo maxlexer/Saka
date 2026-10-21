@@ -242,3 +242,13 @@ UI-UX-Pro-Max queries: hero product minimal text (landing), text over image cont
 - The bottle is centered by layout, not by a translate: its wrapper spans 32 to 100 percent of the hero on desktop, so the bottle stands at 66 percent.
 - Headline on the wall at the top left on phones, vertically centered with the button on desktop. The button sits at the bottom left on phones, under the bottle.
 - Known placeholder gap: the placeholder still ends 8 percent above its frame, so the contact shadow sits a little below the bottle base. Re-check when the real spin videos arrive and move the shadow only if the real stills need it.
+
+## R3 mist
+
+UI-UX-Pro-Max queries: ambient background canvas performance (ux), ambient atmosphere subtle (gsap). Nothing specific to an ambient canvas came back. The usable guidance is lazy loading, which the mist chunk follows. The scroll reveal presets do not apply, since nothing moves on scroll.
+
+- Plan 04's shader, math and cap harness are reused as written, plus the dark palette (#23261C, #3A3A2C, #8C7964), which swaps on the theme switch through a MutationObserver without a reload.
+- The OGL chunk loads with `React.lazy`, like the product modal and cart drawer, not `next/dynamic`, which would add its loader to the first load. Initial JavaScript on `/` is now 169.2KB.
+- Each mount creates its own canvas. The cleanup loses the WebGL context, so a remount (React's dev double mount, or any remount) on the same canvas got the dead context back and fell to the static image.
+- Static fallbacks are captured from the real shader at 800 by 500 (fog has no fine detail): 46KB light, 27KB dark. Both are lazy, so the hidden theme's image never downloads.
+- The plan's budget spec change (skipping scripts that contain the shader) was left out: the budget counts only scripts named in the page's HTML, and the lazy mist chunk is never one of them.

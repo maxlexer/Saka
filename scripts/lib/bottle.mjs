@@ -3,7 +3,10 @@ const CREAM = "#FAF6EE";
 const SURFACE = "#F2EBDF";
 const BORDER = "#DCD0BF";
 
-/** Draws a placeholder bottle at `angle` degrees of turn. Hatched label marks it as a placeholder. */
+/**
+ * Draws a placeholder bottle at `angle` degrees of turn. Hatched label marks it as a placeholder.
+ * @param {{ width?: number, height?: number, angle?: number, fill?: string, tick?: number, ticks?: number, backdrop?: boolean }} [options]
+ */
 export function bottleSvg({ width = 720, height = 960, angle = 0, fill = BORDER, tick, ticks = 24, backdrop = true } = {}) {
   const rad = (angle * Math.PI) / 180;
   const cx = width / 2;

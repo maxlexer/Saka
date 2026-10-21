@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useActiveOrder, useCart } from "@/lib/cart";
-import { computeTotals, formatRiel, formatUsd, priceOf } from "@/lib/pricing";
+import { computeTotals, formatUsd, priceOf } from "@/lib/pricing";
 import type { CartCatalogItem } from "@/lib/sanity";
 import { CartIcon, CloseIcon, MinusIcon, PlusIcon } from "./Icons";
 import { Modal } from "./Modal";
@@ -91,7 +91,7 @@ export function CartMenu({ catalog }: { catalog: CartCatalogItem[] }) {
               </ul>
               <div className="mt-6 flex items-baseline justify-between">
                 <span className="eyebrow">Subtotal</span>
-                <span>{formatUsd(subtotalUsd)} <span className="small text-muted">({formatRiel(subtotalUsd)})</span></span>
+                <span>{formatUsd(subtotalUsd)}</span>
               </div>
               <Link href="/checkout" onClick={() => setOpen(false)} className="btn btn-primary mt-8 w-full">Checkout</Link>
             </>

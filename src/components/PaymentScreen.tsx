@@ -7,7 +7,7 @@ import { encode } from "uqr";
 import { clearCart, setActiveOrder, useActiveOrder, useCart } from "@/lib/cart";
 import { loadDraft, submitOrder } from "@/lib/checkout-client";
 import type { OrderView } from "@/lib/orders";
-import { formatRiel, formatUsd } from "@/lib/pricing";
+import { formatUsd } from "@/lib/pricing";
 import { detailsSchema } from "@/lib/schemas";
 import { CheckIcon } from "./Icons";
 import { Modal } from "./Modal";
@@ -186,7 +186,6 @@ export function PaymentScreen({ orderId, botUsername }: { orderId: string; botUs
       <div className="wrap max-w-[520px] text-center">
         <p className="eyebrow">Pay with KHQR</p>
         <h1 className="h2 mt-3">{formatUsd(view.totalUsd)}</h1>
-        <p className="small mt-1 text-muted">{formatRiel(view.totalUsd)}</p>
         <div className="mx-auto mt-8 w-full max-w-[320px] border border-border bg-[#FAF6EE] p-3">
           <Qr value={view.qr} label={`KHQR code for ${formatUsd(view.totalUsd)}`} />
         </div>

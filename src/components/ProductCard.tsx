@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/lib/cart";
 import { gsap, useGSAP } from "@/lib/gsap";
-import { formatUsd, rielNumber } from "@/lib/pricing";
+import { formatUsd } from "@/lib/pricing";
 import type { Product } from "@/lib/sanity";
 import { MAX_LINE_QTY } from "@/lib/schemas";
 import { LABELS } from "@/lib/taxonomy";
@@ -110,7 +110,6 @@ export function ProductCard({ product, open, onToggle, priority = false }: Props
             </Fragment>
           ))}
         </span>
-        <span className="small block text-muted">{sizes.map((s) => rielNumber(s.priceUsd)).join(" · ")} KHR</span>
         <span className={`small mt-2 inline-flex items-center gap-1 ${available ? "text-success" : "text-error"}`}>
           {available ? <CheckIcon width={18} height={18} /> : <AlertIcon width={18} height={18} />}
           {available ? "Available" : "Out of stock"}

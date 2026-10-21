@@ -1,11 +1,6 @@
 export const DELIVERY_FEE_USD = 2;
-export const RIEL_PER_USD = 4000;
 
 export type Fulfilment = "pickup" | "delivery";
-
-export const toRiel = (usd: number) => Math.round((usd * RIEL_PER_USD) / 100) * 100;
-export const rielNumber = (usd: number) => toRiel(usd).toLocaleString("en-US");
-export const formatRiel = (usd: number) => `${rielNumber(usd)} KHR`;
 
 export function formatUsd(usd: number, compact = false) {
   return compact && Number.isInteger(usd) ? `$${usd}` : `$${usd.toFixed(2)}`;

@@ -50,7 +50,8 @@ test("delivery: needs a Google Maps link, adds $2.00 and sends the map to admin"
   const [admin] = (await mock.messages()).filter((m) => m.chat_id === "-1001");
   expect(admin.text).toContain("Map: https://maps.app.goo.gl/abc123");
   expect(admin.text).toContain("Delivery  $2.00");
-  expect(admin.text).toContain("(56,000 KHR)");
+  expect(admin.text).toContain("Total  $14.00");
+  expect(admin.text).not.toContain("KHR");
 });
 
 test("resume: leaving and returning, or reloading, restores the payment screen and then the paid state", async ({ page }) => {

@@ -1,4 +1,3 @@
-import { formatRiel } from "./pricing";
 import type { OrderRow } from "./supabase";
 
 type Receipt = Pick<OrderRow, "order_number" | "paid_at" | "customer_name" | "telegram" | "fulfilment" | "map_url" | "items" | "delivery_fee_usd" | "total_usd">;
@@ -34,7 +33,7 @@ export function formatAdminMessage(o: Receipt) {
     "Items",
     ...o.items.map((i) => `${escapeHtml(i.name)}, ${i.sizeMl}ml x${i.qty}  ${usd(i.priceUsd * i.qty)}`),
     ...(Number(o.delivery_fee_usd) > 0 ? [`Delivery  ${usd(o.delivery_fee_usd)}`] : []),
-    `Total  ${usd(o.total_usd)} (${formatRiel(Number(o.total_usd))})`,
+    `Total  ${usd(o.total_usd)}`,
   ].join("\n");
 }
 

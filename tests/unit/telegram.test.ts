@@ -23,7 +23,7 @@ describe("escapeHtml", () => {
 });
 
 describe("formatAdminMessage", () => {
-  it("matches the spec for a delivery order, with Phnom Penh time and 4000 KHR per USD", () => {
+  it("matches the spec for a delivery order, with Phnom Penh time and USD only", () => {
     expect(formatAdminMessage(order)).toBe(
       [
         "New order SK-1042",
@@ -38,7 +38,7 @@ describe("formatAdminMessage", () => {
         "Rosewater, 20ml x2  $60.00",
         "Amber Pouch, 10ml x1  $18.00",
         "Delivery  $2.00",
-        "Total  $80.00 (320,000 KHR)",
+        "Total  $80.00",
       ].join("\n"),
     );
   });

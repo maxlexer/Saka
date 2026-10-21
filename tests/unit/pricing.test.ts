@@ -1,19 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { computeTotals, formatRiel, formatUsd, priceOf, toRiel } from "@/lib/pricing";
-
-describe("toRiel", () => {
-  it("uses 4000 KHR per USD, rounded to 100", () => {
-    expect(toRiel(18)).toBe(72000);
-    expect(toRiel(2)).toBe(8000);
-    expect(toRiel(0.01)).toBe(0);
-    expect(toRiel(0.03)).toBe(100);
-  });
-});
+import { computeTotals, formatUsd, priceOf } from "@/lib/pricing";
 
 describe("formatters", () => {
-  it("formats Riel with thousands separators", () => {
-    expect(formatRiel(30)).toBe("120,000 KHR");
-  });
   it("formats USD with two decimals, or compact for whole amounts", () => {
     expect(formatUsd(18)).toBe("$18.00");
     expect(formatUsd(18, true)).toBe("$18");

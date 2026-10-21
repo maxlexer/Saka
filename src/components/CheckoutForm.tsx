@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { setActiveOrder, useActiveOrder, useCart } from "@/lib/cart";
 import { EMPTY_DRAFT, loadDraft, saveDraft, submitOrder, type Draft } from "@/lib/checkout-client";
-import { computeTotals, DELIVERY_FEE_USD, formatRiel, formatUsd, priceOf } from "@/lib/pricing";
+import { computeTotals, DELIVERY_FEE_USD, formatUsd, priceOf } from "@/lib/pricing";
 import type { CartCatalogItem } from "@/lib/sanity";
 import { detailsSchema } from "@/lib/schemas";
 import { AlertIcon } from "./Icons";
@@ -136,7 +136,7 @@ export function CheckoutForm({ catalog, address }: Props) {
           {delivery ? (
             <Field id="mapUrl" label="Google Maps link" error={errors.mapUrl}>
               <input id="mapUrl" type="url" inputMode="url" value={draft.mapUrl} onChange={(e) => set({ mapUrl: e.target.value })} placeholder="https://maps.app.goo.gl/..." {...described("mapUrl")} className={input} />
-              <p className="small mt-2 text-muted">Share your location in Google Maps and paste the link. Delivery adds {formatUsd(DELIVERY_FEE_USD)} ({formatRiel(DELIVERY_FEE_USD)}).</p>
+              <p className="small mt-2 text-muted">Share your location in Google Maps and paste the link. Delivery adds {formatUsd(DELIVERY_FEE_USD)}.</p>
             </Field>
           ) : (
             <p className="small text-muted">Pick up in the shop, free of charge. {address}</p>
@@ -168,7 +168,6 @@ export function CheckoutForm({ catalog, address }: Props) {
             <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatUsd(totals.subtotalUsd)}</dd></div>
             <div className="flex justify-between"><dt>{delivery ? "Delivery" : "Pickup"}</dt><dd>{delivery ? formatUsd(totals.deliveryFeeUsd) : "Free"}</dd></div>
             <div className="flex justify-between font-medium"><dt>Total</dt><dd>{formatUsd(totals.totalUsd)}</dd></div>
-            <div className="small flex justify-between text-muted"><dt>In Riel</dt><dd>{formatRiel(totals.totalUsd)}</dd></div>
           </dl>
         </aside>
       </div>

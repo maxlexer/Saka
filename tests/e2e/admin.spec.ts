@@ -46,9 +46,9 @@ test("availability and name edits reach the storefront, then are restored", asyn
   await expect(row.getByRole("status")).toHaveText("Saved");
   await expect(row.getByLabel(/^Name/)).toHaveValue("Davidoff Cool Water Test");
 
-  await page.goto("/products");
-  const card = page.locator("article", { hasText: "Davidoff Cool Water Test" });
-  await expect(card).toContainText("Out of stock");
+  await page.goto("/products?scent=cool-water");
+  const dialog = page.getByRole("dialog", { name: "Davidoff Cool Water Test" });
+  await expect(dialog.getByText("Out of stock", { exact: true })).toBeVisible();
 
   await page.goto("/admin");
   await rowFor(page, "cool-water").locator(".switch").click();
@@ -63,8 +63,8 @@ test("a price change reaches the storefront and the checkout total, then is rest
   await prices.getByLabel("10ml, USD").fill("13.50");
   await prices.getByRole("button", { name: "Save prices" }).click();
   await expect(prices.getByRole("status")).toHaveText("Saved");
-  await page.goto("/products");
-  await expect(page.locator("article").first()).toContainText("10ml $13.50");
+  await page.goto(`/products?scent=${FIRST.slug}`);
+  await expect(page.getByRole("dialog").getByRole("radio", { name: "10ml, $13.50" })).toBeAttached();
   await addFirstProduct(page);
   await page.goto("/checkout");
   await expect(page.getByRole("main")).toContainText("$13.50");

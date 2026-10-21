@@ -107,11 +107,14 @@ export function SpinBottle({ dir, alt, sizes, priority = false, float = false, c
 
   return (
     <div ref={root} className={`relative ${className}`}>
-      <div ref={body} className="absolute bottom-[9%] left-1/2 aspect-[4/5] h-[89%] -translate-x-1/2">
-        <Image ref={still} src={`${dir}/still.webp`} alt={alt} fill sizes={sizes} priority={priority} className="object-contain" />
-        <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
+      {/* Centered by layout, not by CSS translate: GSAP folds `translate` into its own transform and can freeze a wrong value while the box is hidden. */}
+      <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
+        <div ref={body} className="relative aspect-[4/5] h-full">
+          <Image ref={still} src={`${dir}/still.webp`} alt={alt} fill sizes={sizes} priority={priority} className="object-contain" />
+          <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
+        </div>
       </div>
-      <div ref={shadow} aria-hidden="true" className="absolute bottom-[6%] left-1/2 h-[4%] w-[44%] -translate-x-1/2 rounded-[50%] bg-[var(--contact)] blur-[6px]" />
+      <div ref={shadow} aria-hidden="true" className="absolute inset-x-0 bottom-[6%] mx-auto h-[4%] w-[44%] rounded-[50%] bg-[var(--contact)] blur-[6px]" />
     </div>
   );
 }

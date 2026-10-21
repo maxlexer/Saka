@@ -114,3 +114,22 @@ Rejected:
 Brief wins:
 - Cards show the bottle and the full name only. Sizes, prices and stock live in the modal.
 - The name uses `.card-title` (13px, 15px on desktop), smaller than h3, because designer names are long and must never truncate.
+
+## R2 product modal
+
+Queries: product quick view modal mobile sheet, focus management dialog (both `--domain ux`), shared element transition (`--domain gsap`). The first query returned only general mobile guidance, so the sheet layout follows the spec.
+
+Accepted:
+- One shared element per open: the card bottle glides into the stage. The glide only runs when the card is on the page; a shared link opens with the dialog fade alone.
+- The glide sits in the suggested 500 to 800ms range (`MOTION.glide`, 0.8s).
+- Focus starts on Close, every control shows the 2px focus ring, and closing returns focus to the card.
+
+Rejected:
+- The GSAP Flip plugin. One rectangle measurement of a 4:5 box to a 4:5 box is enough and adds no bundle weight.
+- `expo.inOut` and a 250ms exit cap. The brief wants `power3.inOut` for glides and nothing visible under 300ms, so the exit is `MOTION.exit` (0.5s).
+
+Brief wins:
+- The modal carries the single permitted soft shadow. Desktop is a centered two column dialog, phones get a bottom sheet with the bottle on top.
+- Stock is one fully rounded "Out of stock" pill in ink on taupe, and a disabled Add to cart button that points at it. No icon, no red, no extra line.
+
+Found while watching it: GSAP 3.13 folds the CSS `translate` property (Tailwind's `-translate-x-1/2`) into its own transform. In the modal it did so while the dialog was still closed and froze a wrong pixel offset, so the bottle landed off center. `SpinBottle` now centers the bottle and its shadow with flex and auto margins, and GSAP only touches `y`, `scaleX` and opacity. Reduced motion checked: the modal appears at once, nothing floats, and the spin sprite is never requested.

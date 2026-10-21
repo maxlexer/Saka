@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FIRST, SOLD_OUT } from "./helpers";
+import { addFirstProduct, FIRST } from "./helpers";
 
 test("home shows the hero and the right number of preview cards, with no sizes or prices", async ({ page }, info) => {
   await page.goto("/");
@@ -35,9 +35,7 @@ test("hovering a card with a mouse loads its spin sprite", async ({ page, isMobi
 });
 
 test("adding to the cart updates the count and survives a reload", async ({ page }) => {
-  await page.goto("/products");
-  await page.locator("article").nth(0).getByRole("button").first().click();
-  await page.getByRole("button", { name: "Add to cart" }).first().click();
+  await addFirstProduct(page);
   await expect(page.getByRole("button", { name: /Open cart, 1 item/ })).toBeVisible();
   await page.reload();
   await expect(page.getByRole("button", { name: /Open cart, 1 item/ })).toBeVisible();
@@ -59,9 +57,7 @@ test("content stays within 1200px on wide screens", async ({ page }) => {
 });
 
 test("cart drawer changes quantity, removes lines and returns focus on Escape", async ({ page }) => {
-  await page.goto("/products");
-  await page.locator("article").nth(0).getByRole("button").first().click();
-  await page.getByRole("button", { name: "Add to cart" }).first().click();
+  await addFirstProduct(page);
   const opener = page.getByRole("button", { name: /Open cart/ });
   await opener.click();
   const dialog = page.getByRole("dialog", { name: "Cart" });

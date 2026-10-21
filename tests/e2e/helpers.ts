@@ -44,9 +44,12 @@ export async function expireOrders() {
 }
 
 export async function addFirstProduct(page: Page) {
-  await page.goto("/products");
-  await page.locator("article").first().getByRole("button").first().click();
-  await page.getByRole("button", { name: "Add to cart" }).first().click();
+  await page.goto(`/products?scent=${FIRST.slug}`);
+  const dialog = page.getByRole("dialog", { name: FIRST.name });
+  await dialog.getByRole("button", { name: /^Add to cart/ }).click();
+  await expect(dialog.getByRole("status")).toHaveText("Added to cart.");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
 }
 
 export async function fillDetails(page: Page, fulfilment: "pickup" | "delivery", mapUrl = "https://maps.app.goo.gl/abc123") {

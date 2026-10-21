@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { FadeUp } from "@/components/FadeUp";
 import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
 import { ProductGrid } from "@/components/ProductGrid";
+import { ProductModal } from "@/components/ProductModal";
 import { VisitUs } from "@/components/VisitUs";
 import { getCatalog, previewPicks } from "@/lib/catalog";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const { products } = await getCatalog();
+  const { products, prices } = await getCatalog();
   return (
     <>
       <Hero />
@@ -25,6 +27,9 @@ export default async function HomePage() {
         </FadeUp>
       </section>
       <FadeUp><VisitUs /></FadeUp>
+      <Suspense fallback={null}>
+        <ProductModal products={products} prices={prices} />
+      </Suspense>
     </>
   );
 }

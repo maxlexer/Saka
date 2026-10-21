@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { ProductGrid } from "@/components/ProductGrid";
+import { ProductModal } from "@/components/ProductModal";
 import { getCatalog } from "@/lib/catalog";
 import { LABELS, SCENT_FAMILIES } from "@/lib/taxonomy";
 
@@ -7,7 +9,7 @@ export const revalidate = 300;
 export const metadata = { title: "Products | SAKA Parfum" };
 
 export default async function ProductsPage() {
-  const { products } = await getCatalog();
+  const { products, prices } = await getCatalog();
   return (
     <section aria-labelledby="products-title" className="section">
       <div className="wrap">
@@ -29,6 +31,9 @@ export default async function ProductsPage() {
           })
         )}
       </div>
+      <Suspense fallback={null}>
+        <ProductModal products={products} prices={prices} />
+      </Suspense>
     </section>
   );
 }

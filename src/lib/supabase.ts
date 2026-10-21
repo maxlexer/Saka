@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import type { SizePrices } from "./catalog";
 
 export type OrderItem = { productId: string; name: string; sizeMl: number; priceUsd: number; qty: number };
 
@@ -125,4 +126,13 @@ export async function listProducts(slugs?: string[]) {
 
 export async function listPrices() {
   return ok(await db().from("size_prices").select("size_ml, price_usd")) as unknown[];
+}
+
+export async function updateProduct(slug: string, patch: { name: string; available: boolean }) {
+  const rows = ok(await db().from("products").update({ ...patch, updated_at: new Date().toISOString() }).eq("slug", slug).select("slug"));
+  return (rows?.length ?? 0) > 0;
+}
+
+export async function updatePrices(prices: SizePrices) {
+  ok(await db().from("size_prices").upsert(Object.entries(prices).map(([size, price]) => ({ size_ml: Number(size), price_usd: price }))));
 }

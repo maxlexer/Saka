@@ -1,8 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { checkPassword, createSession, SESSION_COOKIE, SESSION_MS } from "@/lib/admin-auth";
+import { z } from "zod";
+import { checkPassword, createSession, requireAdmin, SESSION_COOKIE, SESSION_MS } from "@/lib/admin-auth";
 import { clientIp, hashIp } from "@/lib/ip";
 import * as db from "@/lib/supabase";
 
@@ -33,4 +35,38 @@ export async function login(_: FormState, form: FormData): Promise<FormState> {
 export async function logout() {
   (await cookies()).delete({ name: SESSION_COOKIE, path: "/admin" });
   redirect("/admin/login");
+}
+
+const productInput = z.object({
+  slug: z.string().regex(/^[a-z0-9-]+$/),
+  name: z.string().trim().min(1, "Enter a name.").max(80, "Use 80 characters or fewer."),
+  available: z.literal("on").optional(),
+});
+
+export async function saveProduct(_: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const input = productInput.safeParse(Object.fromEntries(form));
+  if (!input.success) return { ok: false, message: input.error.issues[0].message };
+  const { slug, name, available } = input.data;
+  if (!(await db.updateProduct(slug, { name, available: available === "on" }))) {
+    return { ok: false, message: "This perfume no longer exists." };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Saved" };
+}
+
+const price = z.coerce
+  .number({ message: "Enter a price." })
+  .min(0.01, "Use at least $0.01.")
+  .max(999.99, "Use less than $1000.")
+  .multipleOf(0.01, "Use whole cents.");
+const pricesInput = z.object({ "10": price, "20": price, "50": price });
+
+export async function savePrices(_: FormState, form: FormData): Promise<FormState> {
+  await requireAdmin();
+  const input = pricesInput.safeParse(Object.fromEntries(form));
+  if (!input.success) return { ok: false, message: input.error.issues[0].message };
+  await db.updatePrices({ 10: input.data["10"], 20: input.data["20"], 50: input.data["50"] });
+  revalidatePath("/", "layout");
+  return { ok: true, message: "Saved" };
 }

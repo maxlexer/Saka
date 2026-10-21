@@ -300,3 +300,11 @@ A subagent reviewed `8d8909a..d053969`: no critical findings, six important ones
   - After Skip, focus falls back to the document start. Moving it to a page element was judged more surprising than helpful.
   - No `react-dom` `preload` for the light floor: its `img` is early in the server HTML with high fetch priority, and a preload hint would also fire whenever another page prefetches home. Dark mode visitors still download the light floor under the dark one; the first switch to dark fades an image that may still be loading.
   - The intro timing specs assume a warm local server. `.impeccable/config.json` holds the one narrow design-hook ignore (spread `src` on the floor images) and stays in the repo.
+
+## R3 Lighthouse variance (after the real backdrops)
+
+Local `/` dropped from 87 to 78 to 80 (TBT 460 to 500ms) after the real backdrops went in. A bisect in a separate worktree ruled out both suspects: the pre-review build scored 78 with the real floors and 80 with the old stand-in floors, the same build that measured 87 to 90 a few hours earlier. With the intro off (`/?x=1`) the page is a steady 90 (TBT 130 to 160ms).
+
+The blamed "long task" is a single animation frame of about 100ms observed (Lighthouse multiplies it by its 4x CPU factor). Inside it, GSAP's tick ran for 0.2ms and style, layout and paint were near zero, so the time is the headless browser stalling while it composites the full screen overlay, not our code. Lighthouse attributes it to the GSAP chunk only because that frame's callback lives there. The CPU benchmark index was similar across runs (1573 to 1800).
+
+Conclusion: no code regression. Local Lighthouse with the intro running is unstable on this machine. The Vercel preview run, and field data after launch, decide. If the preview also shows the stall, the next thing to try is promoting the overlay to its own layer for the whole intro, or not compositing the hero under an opaque overlay until the glide starts.

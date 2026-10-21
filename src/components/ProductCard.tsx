@@ -67,7 +67,7 @@ export function ProductCard({ product, prices, open, onToggle, priority = false 
       <button ref={toggleRef} type="button" aria-expanded={open} aria-controls={panelId} onClick={onToggle} className="block w-full text-center">
         <span className="relative block aspect-square overflow-hidden bg-bg">
           <Image
-            src="/turntable/frame-00.webp"
+            src={`/products/${id}/still.webp`}
             alt={`${name} bottle, placeholder image`}
             fill
             sizes="(min-width: 1024px) 360px, 50vw"

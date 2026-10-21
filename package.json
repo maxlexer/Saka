@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "check": "node scripts/check-copy.ts",
     "seed:sql": "node scripts/seed-sql.ts",
-    "dev:mock": "node tests/dev-mock.mjs"
+    "dev:mock": "node tests/dev-mock.mjs",
+    "frames": "node scripts/frames.ts"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

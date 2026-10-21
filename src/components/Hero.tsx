@@ -11,10 +11,10 @@ export function Hero() {
       </div>
       <Image
         data-hero-bottle
-        src="/turntable/frame-00.webp"
+        src="/hero/still.webp"
         alt="A SAKA Parfum bottle, front view"
-        width={720}
-        height={960}
+        width={960}
+        height={1200}
         priority
         sizes="(min-width: 1024px) 420px, 60vw"
         className="my-8 h-[40svh] w-auto lg:h-[50svh]"

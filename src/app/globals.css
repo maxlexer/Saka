@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Tailwind's `dark:` follows the header switch, not the system setting. */
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
 :root {
   --bg: #faf6ee;
   --surface: #f2ebdf;
@@ -177,6 +180,9 @@ dialog[data-closing]::backdrop { background: rgba(23, 26, 18, 0); }
   html.theme-fade, html.theme-fade * {
     transition: background-color 500ms ease, color 500ms ease, border-color 500ms ease !important;
   }
+  /* The dark floor is display: none in light mode, so it only downloads once chosen. It fades both ways on a switch. */
+  html.theme-fade .floor-dark { transition: opacity 500ms ease, display 500ms allow-discrete !important; }
+  @starting-style { html.theme-fade .floor-dark { opacity: 0; } }
 }
 
 @media (prefers-reduced-motion: no-preference) {

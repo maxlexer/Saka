@@ -227,3 +227,18 @@ Not met locally: performance, LCP and TBT. Thresholds are unchanged. What the tr
 - Tried and reverted for no measured gain: `experimental.inlineCss` and `will-change` on the bottle (GSAP already promotes layers while tweening). Kept: card float loops start paused, so off-screen bottles never animate.
 
 The deployed run on the Vercel preview with the real catalog is the one that counts. R3 replaces the hero, which is the LCP element on `/`.
+
+## R3 floor backdrops
+
+- Generated with Canva AI, four rounds with the owner. The owner chose a clean continuous plaster wall with a soft diagonal sunbeam from the left, an empty stone floor, and no corners, window frames or pebbles.
+- One photo serves both themes. `scripts/grade-floor.ts` grades it through the light stops for day, and for dusk it stretches the levels, applies a 1.6 curve and caps at 55 percent of the dark stops. A separately generated dusk render had a bright patch behind the phone headline and a floor line that did not match the day scene, so the bottle could not stand on both. Grading the day photo keeps the floor line, beam and bottle position identical across the theme switch.
+- The dark stops were reordered (`#393625` before `#3A3A2C`) so the grade never inverts tones. The unit test now checks both scales.
+
+## R3 floor hero
+
+UI-UX-Pro-Max queries: hero product minimal text (landing), text over image contrast (ux). The landing result suggested a features-and-CTA hero; the brief wins with one headline and one button. The contrast guidance is met: #171A12 on the graded day wall (about #F0E9DC behind the headline) is about 15:1, and #F5EFE4 on the dusk wall is above 12:1.
+
+- Backdrops are plain `img` tags from `getImageProps` on the server. The day floor is eager with high fetch priority. The dusk floor is `display: none` in light mode with lazy loading, so a light visitor never downloads it, and it fades both ways on a switch through `@starting-style` and `allow-discrete` scoped to `html.theme-fade`. On a dark first load it shows at once, with no flash of the day floor.
+- The bottle is centered by layout, not by a translate: its wrapper spans 32 to 100 percent of the hero on desktop, so the bottle stands at 66 percent.
+- Headline on the wall at the top left on phones, vertically centered with the button on desktop. The button sits at the bottom left on phones, under the bottle.
+- Known placeholder gap: the placeholder still ends 8 percent above its frame, so the contact shadow sits a little below the bottle base. Re-check when the real spin videos arrive and move the shadow only if the real stills need it.

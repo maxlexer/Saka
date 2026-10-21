@@ -125,7 +125,7 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
           <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
         </div>
       </div>
-      <div ref={shadow} aria-hidden="true" className="absolute inset-x-0 bottom-[6%] mx-auto h-[4%] w-[44%] rounded-[50%] bg-[var(--contact)] blur-[6px]" />
+      <div ref={shadow} data-shadow aria-hidden="true" className="absolute inset-x-0 bottom-[6%] mx-auto h-[4%] w-[44%] rounded-[50%] bg-[var(--contact)] blur-[6px]" />
     </div>
   );
 }

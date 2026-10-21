@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "src/components/Hero.tsx"
+        ],
+        "createdAt": "2026-10-21T08:13:58.927Z",
+        "reason": "Claude: src is spread from next/image getImageProps, static analysis cannot see it"
+      }
+    ]
+  }
+}

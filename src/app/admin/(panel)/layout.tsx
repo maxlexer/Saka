@@ -7,7 +7,7 @@ export const metadata = { title: "Admin | SAKA Parfum", robots: { index: false, 
 const tab = "link tap font-display text-[13px] font-medium uppercase tracking-[0.16em]";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  await requireAdmin();
+  await requireAdmin(); // Guards the shell only. Every page and action checks again.
   return (
     <div className="wrap section">
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-border pb-6">

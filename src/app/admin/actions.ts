@@ -11,17 +11,20 @@ import * as db from "@/lib/supabase";
 const LOCK_WINDOW_MS = 15 * 60_000;
 const MAX_FAILURES = 5;
 
-export type FormState = { ok: boolean; message: string } | null;
+/** A failed save sends back what was typed, because React resets the form after every action. */
+export type FormState = { ok: boolean; message: string; fields?: Record<string, FormDataEntryValue> } | null;
 
 export async function login(_: FormState, form: FormData): Promise<FormState> {
   const ipHash = hashIp(clientIp(await headers()));
-  if ((await db.countLoginFailures(ipHash, new Date(Date.now() - LOCK_WINDOW_MS).toISOString())) >= MAX_FAILURES) {
+  // Record first, then count, so a burst of parallel guesses cannot all slip under the limit.
+  const attempt = await db.recordLoginAttempt(ipHash);
+  if ((await db.countLoginAttempts(ipHash, new Date(Date.now() - LOCK_WINDOW_MS).toISOString())) > MAX_FAILURES) {
     return { ok: false, message: "Too many attempts. Try again in 15 minutes." };
   }
   if (!checkPassword(String(form.get("password") ?? ""))) {
-    await db.recordLoginFailure(ipHash);
     return { ok: false, message: "That password is not right." };
   }
+  await db.forgetLoginAttempt(attempt);
   (await cookies()).set(SESSION_COOKIE, createSession(Date.now()), {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
@@ -45,11 +48,12 @@ const productInput = z.object({
 
 export async function saveProduct(_: FormState, form: FormData): Promise<FormState> {
   await requireAdmin();
-  const input = productInput.safeParse(Object.fromEntries(form));
-  if (!input.success) return { ok: false, message: input.error.issues[0].message };
+  const fields = Object.fromEntries(form);
+  const input = productInput.safeParse(fields);
+  if (!input.success) return { ok: false, message: input.error.issues[0].message, fields };
   const { slug, name, available } = input.data;
   if (!(await db.updateProduct(slug, { name, available: available === "on" }))) {
-    return { ok: false, message: "This perfume no longer exists." };
+    return { ok: false, message: "This perfume no longer exists.", fields };
   }
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved" };
@@ -64,8 +68,9 @@ const pricesInput = z.object({ "10": price, "20": price, "50": price });
 
 export async function savePrices(_: FormState, form: FormData): Promise<FormState> {
   await requireAdmin();
-  const input = pricesInput.safeParse(Object.fromEntries(form));
-  if (!input.success) return { ok: false, message: input.error.issues[0].message };
+  const fields = Object.fromEntries(form);
+  const input = pricesInput.safeParse(fields);
+  if (!input.success) return { ok: false, message: input.error.issues[0].message, fields };
   await db.updatePrices({ 10: input.data["10"], 20: input.data["20"], 50: input.data["50"] });
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved" };

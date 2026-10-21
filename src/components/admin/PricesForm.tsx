@@ -15,7 +15,7 @@ export function PricesForm({ prices }: { prices: SizePrices }) {
         {SIZES_ML.map((size) => (
           <label key={size} className="block">
             <span className="eyebrow mb-2 block">{size}ml, USD</span>
-            <input name={String(size)} type="number" inputMode="decimal" step="0.01" min="0.01" max="999.99" required defaultValue={prices[size].toFixed(2)} className="input bg-bg" />
+            <input name={String(size)} type="number" inputMode="decimal" step="0.01" min="0.01" max="999.99" required defaultValue={String(state?.fields?.[size] ?? prices[size].toFixed(2))} className="input bg-bg" />
           </label>
         ))}
       </div>

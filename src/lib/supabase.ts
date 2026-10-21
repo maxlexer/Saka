@@ -103,14 +103,18 @@ export async function cleanup() {
   return { deleted: deleted.count ?? 0, scrubbed: scrubbed.count ?? 0, attempts: attempts.count ?? 0 };
 }
 
-export async function countLoginFailures(ipHash: string, sinceIso: string) {
+export async function countLoginAttempts(ipHash: string, sinceIso: string) {
   const { count, error } = await db().from("admin_login_attempts").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", sinceIso);
   if (error) throw new Error(error.message);
   return count ?? 0;
 }
 
-export async function recordLoginFailure(ipHash: string) {
-  ok(await db().from("admin_login_attempts").insert({ ip_hash: ipHash }));
+export async function recordLoginAttempt(ipHash: string) {
+  return (ok(await db().from("admin_login_attempts").insert({ ip_hash: ipHash }).select("id").single()) as { id: number }).id;
+}
+
+export async function forgetLoginAttempt(id: number) {
+  ok(await db().from("admin_login_attempts").delete().eq("id", id));
 }
 
 export async function ping() {
@@ -146,8 +150,10 @@ export async function paidOrders(page: number, perPage: number) {
     .select("id, order_number, paid_at, customer_name, telegram, fulfilment, map_url, items, total_usd", { count: "exact" })
     .eq("status", "paid")
     .order("paid_at", { ascending: false })
+    .order("order_number", { ascending: false })
     .range(from, from + perPage - 1);
-  if (error) throw new Error(error.message);
+  // PGRST103: the page starts past the last row. The caller treats it as an empty page.
+  if (error && error.code !== "PGRST103") throw new Error(error.message);
   return { rows: (data ?? []) as PaidOrder[], total: count ?? 0 };
 }
 

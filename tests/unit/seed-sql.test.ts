@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { catalogRows, type CatalogFile } from "../../scripts/lib/catalog-rows.ts";
 import { seedSql } from "../../scripts/seed-sql.ts";
@@ -34,4 +35,9 @@ describe("seedSql", () => {
   it("keeps availability and shelf order", () => {
     expect(sql).toMatch(/'cool-water'.*false, 20\)/);
   });
+});
+
+it("the committed seed migration matches catalog.json (run npm run seed:sql after editing it)", () => {
+  const read = (path: string) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+  expect(read("supabase/migrations/20261019000100_catalog_seed.sql")).toBe(seedSql(JSON.parse(read("supabase/seed/catalog.json"))));
 });

@@ -4,12 +4,12 @@ import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
 import { ProductGrid } from "@/components/ProductGrid";
 import { VisitUs } from "@/components/VisitUs";
-import { EMPTY_CATALOG, getCatalog } from "@/lib/catalog";
+import { getCatalog } from "@/lib/catalog";
 
 export const revalidate = 300;
 
 export default async function HomePage() {
-  const { products, prices } = await getCatalog().catch(() => EMPTY_CATALOG);
+  const { products, prices } = await getCatalog();
   return (
     <>
       <Hero />

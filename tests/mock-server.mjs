@@ -5,6 +5,8 @@ const fresh = () => ({ khqr: [], telegram: [] });
 export const state = fresh();
 
 // The slice of PostgREST that supabase-js uses for the catalog, prices, login attempts and admin reads.
+// Looser than the real thing: it ignores the select column list and the return preference, enforces no
+// CHECK constraints, and answers an empty .single() with null instead of 406. Keep app code to what real PostgREST accepts.
 const tables = { products: [], size_prices: [], admin_login_attempts: [], orders: [] };
 const KEYS = { products: "slug", size_prices: "size_ml", admin_login_attempts: "id", orders: "id" };
 const RESERVED = new Set(["select", "order", "limit", "offset", "on_conflict", "columns"]);
@@ -44,12 +46,21 @@ function postgrest(req, res, url, body) {
     let rows = table.filter(hit);
     const order = url.searchParams.get("order");
     if (order) {
-      const [column, dir] = order.split(".");
-      const sign = dir === "desc" ? -1 : 1;
-      rows = [...rows].sort((a, b) => (a[column] > b[column] ? sign : a[column] < b[column] ? -sign : 0));
+      const keys = order.split(",").map((key) => key.split("."));
+      rows = [...rows].sort((a, b) => {
+        for (const [column, dir] of keys) {
+          const sign = dir === "desc" ? -1 : 1;
+          if (a[column] !== b[column]) return a[column] > b[column] ? sign : -sign;
+        }
+        return 0;
+      });
     }
     const offset = Number(url.searchParams.get("offset") ?? 0);
     const limit = url.searchParams.get("limit");
+    if (prefer.includes("count=exact") && offset > 0 && offset >= rows.length) {
+      res.writeHead(416, { "content-type": "application/json", "content-range": `*/${rows.length}` });
+      return res.end(JSON.stringify({ code: "PGRST103", message: "Requested range not satisfiable" }));
+    }
     return reply(rows.slice(offset, limit ? offset + Number(limit) : undefined), rows.length);
   }
   if (req.method === "POST") {

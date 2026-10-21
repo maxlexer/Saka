@@ -32,6 +32,13 @@ export async function resetAll() {
   await fetch(`${SB_URL}/rest/v1/orders?id=not.is.null`, { method: "DELETE", headers: sbHeaders });
 }
 
+/** Paid orders straight into the database, with the columns the real schema requires filled in. */
+export async function insertPaidOrders(orders: Record<string, unknown>[]) {
+  const rows = orders.map((order, i) => ({ status: "paid", claim_token: `claim-${i}`, khqr_md5: `md5-${i}`, khqr_qr: "QR", expires_at: new Date().toISOString(), ...order }));
+  const res = await fetch(`${SB_URL}/rest/v1/orders`, { method: "POST", headers: sbHeaders, body: JSON.stringify(rows) });
+  if (!res.ok) throw new Error(`insert orders failed: ${res.status} ${await res.text()}`);
+}
+
 export async function expireOrders() {
   await fetch(`${SB_URL}/rest/v1/orders?id=not.is.null`, { method: "PATCH", headers: sbHeaders, body: JSON.stringify({ expires_at: new Date(Date.now() - 60_000).toISOString() }) });
 }

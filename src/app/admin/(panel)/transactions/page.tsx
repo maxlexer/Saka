@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+import { requireAdmin } from "@/lib/admin-auth";
 import { formatUsd } from "@/lib/pricing";
 import { paidOrders, paidSince } from "@/lib/supabase";
 import { orderNumber } from "@/lib/telegram";
@@ -9,12 +11,14 @@ const PER_PAGE = 50;
 const sum = (orders: { total_usd: number }[]) => orders.reduce((cents, o) => cents + Math.round(Number(o.total_usd) * 100), 0) / 100;
 
 export default async function TransactionsPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
+  await requireAdmin();
   const page = Math.max(1, Math.floor(Number((await searchParams).page)) || 1);
   const now = new Date();
   const [{ rows, total }, month] = await Promise.all([
     paidOrders(page, PER_PAGE),
     paidSince(phnomPenhStart("month", now).toISOString()),
   ]);
+  if (rows.length === 0 && page > 1) redirect("/admin/transactions");
   const dayStart = phnomPenhStart("day", now).getTime();
   const today = month.filter((o) => o.paid_at && Date.parse(o.paid_at) >= dayStart);
   const pages = Math.max(1, Math.ceil(total / PER_PAGE));

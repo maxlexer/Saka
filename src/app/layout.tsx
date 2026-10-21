@@ -11,6 +11,7 @@ const jost = Jost({ subsets: ["latin"], weight: ["400", "500"], variable: "--fon
 export const metadata: Metadata = { title: "SAKA Parfum | Fragrance shop in Cambodia" };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Cached pages throw on a failed read and keep their last good copy. Only uncached pages fall back here.
   const catalog = await getCatalog().catch(() => EMPTY_CATALOG);
   return (
     <html lang="en" className={`${montserrat.variable} ${jost.variable}`}>

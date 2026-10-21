@@ -1,9 +1,11 @@
 import { PricesForm } from "@/components/admin/PricesForm";
 import { ProductRow } from "@/components/admin/ProductRow";
+import { requireAdmin } from "@/lib/admin-auth";
 import { getCatalog } from "@/lib/catalog";
 import { LABELS, SCENT_FAMILIES } from "@/lib/taxonomy";
 
 export default async function AdminProductsPage() {
+  await requireAdmin();
   const { products, prices } = await getCatalog();
   return (
     <>

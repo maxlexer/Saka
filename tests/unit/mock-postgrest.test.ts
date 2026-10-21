@@ -22,6 +22,8 @@ describe("mock PostgREST", () => {
     ]);
     const ordered = await db.from("products").select("slug").order("sort");
     expect(ordered.data?.map((r) => r.slug)).toEqual(["a", "b", "c"]);
+    const byTwoKeys = await db.from("products").select("slug").order("available", { ascending: false }).order("sort", { ascending: false });
+    expect(byTwoKeys.data?.map((r) => r.slug)).toEqual(["c", "b", "a"]);
     const some = await db.from("products").select("slug").in("slug", ["c", "a"]).order("sort", { ascending: false });
     expect(some.data?.map((r) => r.slug)).toEqual(["c", "a"]);
     const { count } = await db.from("products").select("slug", { count: "exact", head: true }).eq("available", true);

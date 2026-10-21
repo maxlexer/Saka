@@ -1,11 +1,11 @@
 import { CheckoutForm } from "@/components/CheckoutForm";
-import { EMPTY_CATALOG, getCatalog, toCartCatalog } from "@/lib/catalog";
+import { getCatalog, toCartCatalog } from "@/lib/catalog";
 
 export const revalidate = 300;
 export const metadata = { title: "Checkout | SAKA Parfum", robots: { index: false, follow: false } };
 
 export default async function CheckoutPage() {
-  const catalog = await getCatalog().catch(() => EMPTY_CATALOG);
+  const catalog = await getCatalog();
   return (
     <section aria-labelledby="checkout-title" className="section">
       <div className="wrap">

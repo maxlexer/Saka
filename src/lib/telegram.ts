@@ -1,4 +1,5 @@
 import type { OrderRow } from "./supabase";
+import { phnomPenhTime } from "./time";
 
 type Receipt = Pick<OrderRow, "order_number" | "paid_at" | "customer_name" | "telegram" | "fulfilment" | "map_url" | "items" | "delivery_fee_usd" | "total_usd">;
 
@@ -7,23 +8,11 @@ export const orderNumber = (n: number | null) => `SK-${n ?? "pending"}`;
 
 const usd = (amount: number) => `$${Number(amount).toFixed(2)}`;
 
-function phnomPenhTime(iso: string | null) {
-  const parts = Object.fromEntries(
-    new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Asia/Phnom_Penh", year: "numeric", month: "2-digit", day: "2-digit",
-      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
-    })
-      .formatToParts(iso ? new Date(iso) : new Date())
-      .map((p) => [p.type, p.value]),
-  );
-  return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute} (Phnom Penh)`;
-}
-
 export function formatAdminMessage(o: Receipt) {
   const delivery = o.fulfilment === "delivery";
   return [
     `New order ${orderNumber(o.order_number)}`,
-    `Paid ${phnomPenhTime(o.paid_at)}`,
+    `Paid ${phnomPenhTime(o.paid_at)} (Phnom Penh)`,
     "",
     `Name: ${escapeHtml(o.customer_name ?? "")}`,
     `Telegram: ${escapeHtml(o.telegram ?? "")}`,
@@ -39,7 +28,7 @@ export function formatAdminMessage(o: Receipt) {
 
 export function formatConfirmation(o: Receipt) {
   const first = escapeHtml((o.customer_name ?? "").split(" ")[0]);
-  return `Thank you, ${first}. Order ${orderNumber(o.order_number)} is confirmed. Total ${usd(o.total_usd)}, ${o.fulfilment}. Paid ${phnomPenhTime(o.paid_at)}. We will message you when it is ready.`;
+  return `Thank you, ${first}. Order ${orderNumber(o.order_number)} is confirmed. Total ${usd(o.total_usd)}, ${o.fulfilment}. Paid ${phnomPenhTime(o.paid_at)} (Phnom Penh). We will message you when it is ready.`;
 }
 
 export async function sendMessage(chatId: number | string, text: string) {

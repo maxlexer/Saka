@@ -77,3 +77,12 @@ test("invalid input is refused with a message", async ({ page }) => {
   await prices.getByRole("button", { name: "Save prices" }).click();
   await expect(prices.getByRole("status")).toHaveText("Use at least $0.01.");
 });
+
+test("transactions show zero totals and an empty state when nothing is paid", async ({ page }) => {
+  await signIn(page);
+  await page.getByRole("link", { name: "Transactions" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Transactions" })).toBeVisible();
+  await expect(page.getByText("Today")).toBeVisible();
+  await expect(page.getByText("$0.00").first()).toBeVisible();
+  await expect(page.getByText("No paid orders yet.")).toBeVisible();
+});

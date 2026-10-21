@@ -136,3 +136,21 @@ export async function updateProduct(slug: string, patch: { name: string; availab
 export async function updatePrices(prices: SizePrices) {
   ok(await db().from("size_prices").upsert(Object.entries(prices).map(([size, price]) => ({ size_ml: Number(size), price_usd: price }))));
 }
+
+export type PaidOrder = Pick<OrderRow, "id" | "order_number" | "paid_at" | "customer_name" | "telegram" | "fulfilment" | "map_url" | "items" | "total_usd">;
+
+export async function paidOrders(page: number, perPage: number) {
+  const from = (page - 1) * perPage;
+  const { data, count, error } = await db()
+    .from("orders")
+    .select("id, order_number, paid_at, customer_name, telegram, fulfilment, map_url, items, total_usd", { count: "exact" })
+    .eq("status", "paid")
+    .order("paid_at", { ascending: false })
+    .range(from, from + perPage - 1);
+  if (error) throw new Error(error.message);
+  return { rows: (data ?? []) as PaidOrder[], total: count ?? 0 };
+}
+
+export async function paidSince(sinceIso: string) {
+  return ok(await db().from("orders").select("total_usd, paid_at").eq("status", "paid").gte("paid_at", sinceIso)) as Pick<OrderRow, "total_usd" | "paid_at">[];
+}

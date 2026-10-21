@@ -64,3 +64,9 @@ export async function payAndTrigger(page: Page, amount?: number) {
   const { md5 } = await mock.pay(amount);
   await page.request.post("/api/khqr/webhook", { data: { md5 } });
 }
+
+export async function signIn(page: Page, password = "test-admin-password") {
+  await page.goto("/admin/login");
+  await page.getByLabel("Password").fill(password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+}

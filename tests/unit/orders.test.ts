@@ -207,8 +207,8 @@ describe("runDaily", () => {
     vi.mocked(db.getOrderByMd5).mockResolvedValue(pendingRow());
     vi.mocked(checkPaid).mockResolvedValue({ paid: true, amount: 24, currency: "USD" });
     vi.mocked(db.settleByMd5).mockResolvedValue(paidRow());
-    vi.mocked(db.cleanup).mockResolvedValue({ deleted: 3, scrubbed: 1 });
-    expect(await runDaily()).toEqual({ retried: 1, settled: 1, deleted: 3, scrubbed: 1 });
+    vi.mocked(db.cleanup).mockResolvedValue({ deleted: 3, scrubbed: 1, attempts: 2 });
+    expect(await runDaily()).toEqual({ retried: 1, settled: 1, deleted: 3, scrubbed: 1, attempts: 2 });
     expect(db.ping).toHaveBeenCalled();
   });
   it("keeps checking the other orders when one check fails", async () => {
@@ -218,7 +218,7 @@ describe("runDaily", () => {
     vi.mocked(db.getOrderByMd5).mockResolvedValue(pendingRow());
     vi.mocked(checkPaid).mockRejectedValueOnce(new Error("rate limited")).mockResolvedValueOnce({ paid: true, amount: 24, currency: "USD" });
     vi.mocked(db.settleByMd5).mockResolvedValue(paidRow());
-    vi.mocked(db.cleanup).mockResolvedValue({ deleted: 0, scrubbed: 0 });
+    vi.mocked(db.cleanup).mockResolvedValue({ deleted: 0, scrubbed: 0, attempts: 0 });
     expect(await runDaily()).toMatchObject({ settled: 1 });
   });
 });

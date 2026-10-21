@@ -95,9 +95,21 @@ export async function cleanup() {
     .eq("status", "paid")
     .lt("paid_at", ago(90 * 24 * HOUR_MS))
     .not("customer_name", "is", null);
+  const attempts = await db().from("admin_login_attempts").delete({ count: "exact" }).lt("created_at", ago(24 * HOUR_MS));
+  ok(attempts);
   ok(deleted);
   ok(scrubbed);
-  return { deleted: deleted.count ?? 0, scrubbed: scrubbed.count ?? 0 };
+  return { deleted: deleted.count ?? 0, scrubbed: scrubbed.count ?? 0, attempts: attempts.count ?? 0 };
+}
+
+export async function countLoginFailures(ipHash: string, sinceIso: string) {
+  const { count, error } = await db().from("admin_login_attempts").select("id", { count: "exact", head: true }).eq("ip_hash", ipHash).gte("created_at", sinceIso);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+export async function recordLoginFailure(ipHash: string) {
+  ok(await db().from("admin_login_attempts").insert({ ip_hash: ipHash }));
 }
 
 export async function ping() {

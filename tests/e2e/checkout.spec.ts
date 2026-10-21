@@ -105,7 +105,7 @@ test("checkout re-checks live stock and names the item", async ({ page }) => {
   await page.goto("/checkout");
   await fillDetails(page, "pickup");
   await page.getByRole("button", { name: "Pay with KHQR" }).click();
-  await expect(page.getByRole("alert")).toContainText(`${FIRST.name} is out of stock`);
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(`${FIRST.name} is out of stock`);
 });
 
 test("the status route hides personal data and unknown orders are not found", async ({ page, request }) => {

@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("next/image", () => ({ default: () => null }));
 vi.mock("@/lib/gsap", () => ({ gsap: {}, useGSAP: () => ({ contextSafe: (fn: unknown) => fn }), MOTION: {} }));
 
 import { FRAMES, framePosition } from "@/components/SpinBottle";

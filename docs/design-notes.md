@@ -191,3 +191,39 @@ Route skeletons: `/` and `/products` no longer have a `loading.tsx`. Both are pr
 - Touch targets: every control on `/` and `/products` is at least 44px in one direction, counting the `.tap` hit area.
 - The payment screen and Telegram popup axe check lives in `checkout.spec.ts` and runs with the other checkout specs once `.env.test` points at a Supabase test project. The local mock cannot create orders.
 - Still to do by a person: one screen reader pass (NVDA or VoiceOver) on `/`, `/products` and the payment screen. Listen for one H1 then H2 then H3, the four landmarks, the finder count and payment status announced politely, and the Telegram popup announcing its title.
+
+## Plan 03 bundle budget
+
+Initial JavaScript is every script a page's own HTML loads (`budget.spec.ts`), gzipped, with `nomodule` skipped. It does not count what loads later: Next prefetching another route's chunk in idle time (that chunk is measured on its own route) and lazy chunks. The first version summed everything until network idle, which made the result depend on whether a prefetch landed in time (the same build read 168KB or 172KB).
+
+| Page | R2 | Now | Budget |
+|---|---|---|---|
+| `/` | 206.8KB | 168.5KB | 170KB |
+| `/products` | 215.8KB | 167.0KB | 170KB |
+
+What changed:
+- Zod left the storefront (31.6KB). The cart checks saved lines with a plain guard (`cart-line.ts`, unit tested). The server still validates every order with Zod.
+- No `next/image` client component (about 4KB per page chunk, and Turbopack copied it into each one). The hero uses `getImageProps` on the server with a matching preload. Bottle stills were already `unoptimized`, so they are plain `img` tags.
+- The product modal, cart drawer and mobile menu load on intent (hover, focus or touch down) with `React.lazy`, then stay mounted so they animate closed.
+
+About 156KB is fixed: React, Next and its server components runtime (about 129KB) and GSAP (about 27KB). App code on the first load is about 12KB on `/`, so R3's intro has roughly 1.5KB of room or must move something off the first load.
+
+## Plan 03 Lighthouse (local, `npm run lighthouse`, median of 3, mobile emulation)
+
+| | `/` | `/products` | Target |
+|---|---|---|---|
+| Performance | 88 | 84 | 90 |
+| Accessibility | 100 | 100 | 95 |
+| Best practices | 100 | 100 | 90 |
+| SEO | 100 | 100 | 95 |
+| LCP | 3.36s | 3.87s | 2.5s |
+| CLS | 0.000 | 0.000 | 0.1 |
+| TBT | 260ms | 211ms | 200ms |
+
+Not met locally: performance, LCP and TBT. Thresholds are unchanged. What the traces show:
+- Observed LCP equals first paint (240ms on `/`, 188ms on `/products`). The simulated LCP is long because Lighthouse's slow 4G model shares bandwidth between the LCP image and every script requested before first paint. With all JavaScript blocked, the same page simulates at LCP 2.0s.
+- `next start` serves HTTP/1.1, so the local run also queues on six connections per origin. Vercel serves HTTP/2.
+- TBT is mostly React hydration (long tasks of 253, 138 and 65ms at 4x CPU slowdown).
+- Tried and reverted for no measured gain: `experimental.inlineCss` and `will-change` on the bottle (GSAP already promotes layers while tweening). Kept: card float loops start paused, so off-screen bottles never animate.
+
+The deployed run on the Vercel preview with the real catalog is the one that counts. R3 replaces the hero, which is the LCP element on `/`.

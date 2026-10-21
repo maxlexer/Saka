@@ -1,7 +1,7 @@
 "use client";
 
-import Image from "next/image";
 import { useImperativeHandle, useRef, type Ref } from "react";
+import { preload } from "react-dom";
 import { gsap, useGSAP } from "@/lib/gsap";
 
 export const FRAMES = 36;
@@ -49,6 +49,8 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
   const shadow = useRef<HTMLDivElement>(null);
   const turning = useRef(false);
   const src = `${dir}/spin.webp`;
+  const stillSrc = `${dir}/still.webp`;
+  if (priority) preload(stillSrc, { as: "image", fetchPriority: "high" });
 
   const { contextSafe } = useGSAP(
     () => {
@@ -57,10 +59,11 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
       mm.add("(prefers-reduced-motion: no-preference)", () => {
         const period = gsap.utils.random(3.2, 4);
         const tl = gsap
-          .timeline({ repeat: -1, yoyo: true, defaults: { duration: period / 2, ease: "sine.inOut" } })
+          .timeline({ paused: true, repeat: -1, yoyo: true, defaults: { duration: period / 2, ease: "sine.inOut" } })
           .to(body.current, { y: -4 }, 0)
           .to(shadow.current, { scaleX: 0.86, opacity: 0.7 }, 0);
         tl.totalTime(gsap.utils.random(0, period));
+        // Starts paused, so bottles below the fold never animate until they scroll into view.
         const io = new IntersectionObserver(([entry]) => (entry.isIntersecting ? tl.resume() : tl.pause()));
         io.observe(root.current as Element);
         return () => io.disconnect();
@@ -109,8 +112,16 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
       {/* Centered by layout, not by CSS translate: GSAP folds `translate` into its own transform and can freeze a wrong value while the box is hidden. */}
       <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
         <div ref={body} className="relative aspect-[4/5] h-full">
-          {/* Served as written by scripts/frames.ts, so a card, the modal and the hero share one cached file and a glide never waits on a new size. */}
-          <Image ref={still} src={`${dir}/still.webp`} alt={alt} fill priority={priority} unoptimized className="object-contain" />
+          {/* A plain img served as written by scripts/frames.ts: a card, the modal and the hero share one cached file, a glide never waits on a new size, and no image component ships to the browser. */}
+          <img
+            ref={still}
+            src={stillSrc}
+            alt={alt}
+            loading={priority ? "eager" : "lazy"}
+            fetchPriority={priority ? "high" : undefined}
+            decoding="async"
+            className="absolute inset-0 size-full object-contain"
+          />
           <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
         </div>
       </div>

@@ -3,42 +3,18 @@
 import { useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
 import { useCart } from "@/lib/cart";
+import { MAX_LINE_QTY } from "@/lib/cart-line";
 import type { Product, SizePrices } from "@/lib/catalog";
 import { gsap, MOTION } from "@/lib/gsap";
 import { formatUsd } from "@/lib/pricing";
-import { MAX_LINE_QTY } from "@/lib/schemas";
+import { closeScent, SCENT_PARAM, scentClosed } from "@/lib/scent-url";
 import { LABELS, SIZES_ML, type SizeMl } from "@/lib/taxonomy";
 import { CloseIcon, MinusIcon, PlusIcon } from "./Icons";
 import { Modal } from "./Modal";
 import { SpinBottle, type SpinHandle } from "./SpinBottle";
 
-const PARAM = "scent";
 const TURN_S = 2.2;
 const TURN_EVERY_MS = 6000;
-let pushed = false;
-
-function urlWith(slug: string | null) {
-  const params = new URLSearchParams(window.location.search);
-  if (slug) params.set(PARAM, slug);
-  else params.delete(PARAM);
-  const query = params.toString();
-  return `${window.location.pathname}${query ? `?${query}` : ""}${window.location.hash}`;
-}
-
-/** Opens the product modal in place. The URL can be shared, and Back closes the modal. */
-export function openScent(slug: string) {
-  pushed = true;
-  window.history.pushState(null, "", urlWith(slug));
-}
-
-function closeScent() {
-  if (pushed) {
-    pushed = false;
-    window.history.back();
-  } else {
-    window.history.replaceState(null, "", urlWith(null));
-  }
-}
 
 /** Offset and scale that place `el` exactly over `target`, for the card to stage glide. Both boxes are 4:5. */
 function flip(target: Element, el: Element) {
@@ -48,7 +24,7 @@ function flip(target: Element, el: Element) {
 }
 
 export function ProductModal({ products, prices }: { products: Product[]; prices: SizePrices }) {
-  const slug = useSearchParams().get(PARAM);
+  const slug = useSearchParams().get(SCENT_PARAM);
   const product = products.find((p) => p.id === slug) ?? null;
   const [shown, setShown] = useState<Product | null>(product);
   if (product && product !== shown) setShown(product);
@@ -59,7 +35,7 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
   // The bottle turns once after it lands, then every few seconds while the modal is open.
   useEffect(() => {
     if (!open) {
-      pushed = false;
+      scentClosed();
       return;
     }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;

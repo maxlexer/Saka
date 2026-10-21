@@ -1,5 +1,6 @@
 import { z } from "zod";
-import type { CartLine, Details } from "./schemas";
+import type { CartLine } from "./cart-line";
+import type { Details } from "./schemas";
 
 const DRAFT_KEY = "saka.draft";
 

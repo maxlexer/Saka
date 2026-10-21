@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import { EmptyShelf } from "@/components/EmptyShelf";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
-import { ProductModal } from "@/components/ProductModal";
+import { ScentModal } from "@/components/ScentModal";
 import { getCatalog } from "@/lib/catalog";
 import { productList, SITE_URL } from "@/lib/jsonld";
 import { LABELS, SCENT_FAMILIES } from "@/lib/taxonomy";
@@ -31,7 +31,7 @@ export default async function ProductsPage() {
         )}
       </div>
       <Suspense fallback={null}>
-        <ProductModal products={products} prices={prices} />
+        <ScentModal products={products} prices={prices} />
       </Suspense>
     </section>
   );

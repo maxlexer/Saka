@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addLine, setLineQty } from "@/lib/cart";
+import { toLine } from "@/lib/cart-line";
 
 const line = (productId: string, sizeMl: 10 | 20 | 50, qty: number) => ({ productId, sizeMl, qty });
 
@@ -35,5 +36,16 @@ describe("setLineQty", () => {
   });
   it("caps at 10", () => {
     expect(setLineQty([line("a", 10, 1)], "a", 10, 99)[0].qty).toBe(10);
+  });
+});
+
+describe("toLine", () => {
+  it("keeps a valid saved line and drops extra fields", () => {
+    expect(toLine({ productId: "cool-water", sizeMl: 20, qty: 2, extra: true })).toEqual([{ productId: "cool-water", sizeMl: 20, qty: 2 }]);
+  });
+  it("drops anything malformed", () => {
+    for (const bad of [null, "x", {}, { productId: "", sizeMl: 10, qty: 1 }, { productId: "a", sizeMl: 30, qty: 1 }, { productId: "a", sizeMl: 10, qty: 0 }, { productId: "a", sizeMl: 10, qty: 11 }, { productId: "a", sizeMl: 10, qty: 1.5 }, { productId: "a", sizeMl: "10", qty: 1 }]) {
+      expect(toLine(bad)).toEqual([]);
+    }
   });
 });

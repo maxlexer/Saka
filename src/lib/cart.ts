@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { cartLineSchema, MAX_CART_LINES, MAX_LINE_QTY, type CartLine } from "./schemas";
+import { MAX_CART_LINES, MAX_LINE_QTY, toLine, type CartLine } from "./cart-line";
 
 const KEY = "saka.cart";
 const ACTIVE_KEY = "saka.activeOrder";
@@ -24,10 +24,7 @@ function readStorage(): CartLine[] {
   try {
     const raw: unknown = JSON.parse(localStorage.getItem(KEY) ?? "[]");
     if (!Array.isArray(raw)) return [];
-    return raw.flatMap((item) => {
-      const line = cartLineSchema.safeParse(item);
-      return line.success ? [line.data] : [];
-    }).slice(0, MAX_CART_LINES);
+    return raw.flatMap(toLine).slice(0, MAX_CART_LINES);
   } catch {
     return [];
   }

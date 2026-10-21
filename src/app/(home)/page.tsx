@@ -7,7 +7,7 @@ import { Hero } from "@/components/Hero";
 import { ArrowIcon } from "@/components/Icons";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
-import { ProductModal } from "@/components/ProductModal";
+import { ScentModal } from "@/components/ScentModal";
 import { VisitUs } from "@/components/VisitUs";
 import { getCatalog, previewPicks } from "@/lib/catalog";
 import { localBusiness, SITE_URL } from "@/lib/jsonld";
@@ -45,7 +45,7 @@ export default async function HomePage() {
       )}
       <FadeUp><VisitUs /></FadeUp>
       <Suspense fallback={null}>
-        <ProductModal products={products} prices={prices} />
+        <ScentModal products={products} prices={prices} />
       </Suspense>
     </>
   );

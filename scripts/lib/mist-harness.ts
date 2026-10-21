@@ -2,7 +2,7 @@ import type { Page } from "@playwright/test";
 import { fragment, vertex } from "../../src/lib/mist-shader.ts";
 import { hexToRgb, MIST_COLORS, type Box } from "../../src/lib/mist-math.ts";
 
-type Boxes = Partial<Record<"keepA" | "keepB" | "bottle" | "text", Box>>;
+type Boxes = Partial<Record<"keepA" | "bottle" | "text", Box>>;
 type Options = { width: number; height: number; time?: number; scale?: number; colors?: readonly string[]; boxes?: Boxes };
 
 /** Draws one frame of the real shader in a fresh canvas and reports the maximum alpha per region. */
@@ -52,7 +52,6 @@ export function renderMist(page: Page, { width, height, time = 40, scale = 1, co
       set("uForce", 0);
       set("uRadius", 160);
       set("uKeepA", ...(boxes.keepA ?? zero));
-      set("uKeepB", ...(boxes.keepB ?? zero));
       set("uBottle", ...(boxes.bottle ?? zero));
       set("uText", ...(boxes.text ?? zero));
 

@@ -18,7 +18,7 @@ const FLOOR = "-z-10 object-cover object-[50%_70%]";
 
 export function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="relative isolate h-[max(600px,calc(100svh-4.5rem))] touch-pan-y overflow-hidden">
+    <section aria-labelledby="hero-title" className="relative isolate h-[max(600px,calc(100svh-4.5rem))] touch-pan-y touch-pinch-zoom overflow-hidden">
       <img {...floor("light")} className={FLOOR} />
       {/* Hidden in light mode, so it only downloads once dark is chosen. */}
       <img {...floor("dark")} className={`floor-dark hidden opacity-0 dark:block dark:opacity-100 ${FLOOR}`} />

@@ -8,15 +8,9 @@ const Mist = lazy(() => import("./Mist"));
 
 /** The mask keeps the fog low over the floor, fading out above roughly 65 percent of the hero height. */
 const MASK = "[mask-image:linear-gradient(to_top,black_30%,transparent_68%)]";
-const STILL = "h-full w-full object-cover";
-
-// Decorative. Lazy, so the other theme's still never downloads.
-const stills = (
-  <>
-    <img src="/mist-static.webp" alt="" loading="lazy" className={`${STILL} dark:hidden`} />
-    <img src="/mist-static-dark.webp" alt="" loading="lazy" className={`${STILL} hidden dark:block`} />
-  </>
-);
+// The still's caps were baked for the desktop layout. At 55 percent no region passes the 0.3 bottle cap on any layout.
+const STILL = "h-full w-full object-cover opacity-55";
+const FADE = { duration: 0.8, ease: "power1.inOut" };
 
 /**
  * The fog starts as a captured frame of the shader, which costs nothing. The live shader only takes over when a
@@ -25,8 +19,20 @@ const stills = (
  */
 export function MistLayer() {
   const layer = useRef<HTMLDivElement>(null);
+  const still = useRef<HTMLDivElement>(null);
+  const canvas = useRef<HTMLDivElement>(null);
   const [live, setLive] = useState(false);
-  const fallBack = useCallback(() => setLive(false), []);
+
+  // The live shader only starts under the no-preference branch below, so these fades never run with reduced motion.
+  // The canvas fades in over the still once its first frame is drawn, so the swap never blanks or jumps.
+  const ready = useCallback(() => {
+    gsap.to(canvas.current, { opacity: 1, ...FADE });
+    gsap.to(still.current, { opacity: 0, ...FADE });
+  }, []);
+  const fallBack = useCallback(() => {
+    gsap.set(still.current, { clearProps: "opacity" });
+    setLive(false);
+  }, []);
 
   useGSAP(
     () => {
@@ -56,12 +62,17 @@ export function MistLayer() {
 
   return (
     <div ref={layer} aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[5] opacity-0 ${MASK}`}>
-      {live ? (
-        <Suspense fallback={stills}>
-          <Mist onFail={fallBack} />
-        </Suspense>
-      ) : (
-        stills
+      {/* Decorative. Lazy, so the other theme's still never downloads. */}
+      <div ref={still} className="absolute inset-0">
+        <img src="/mist-static.webp" alt="" loading="lazy" className={`${STILL} dark:hidden`} />
+        <img src="/mist-static-dark.webp" alt="" loading="lazy" className={`${STILL} hidden dark:block`} />
+      </div>
+      {live && (
+        <div ref={canvas} className="absolute inset-0 opacity-0">
+          <Suspense fallback={null}>
+            <Mist onReady={ready} onFail={fallBack} />
+          </Suspense>
+        </div>
       )}
     </div>
   );

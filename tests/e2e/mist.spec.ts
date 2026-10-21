@@ -10,14 +10,18 @@ const VIEWPORTS = [{ width: 360, height: 740 }, { width: 768, height: 1024 }, { 
 test.describe("mist", () => {
   test.skip(({ isMobile }) => isMobile, "Viewports are set explicitly below");
 
-  test("the hero starts with the still, and the live canvas takes over on hover", async ({ page }) => {
+  test("the hero starts with the still, and the live canvas fades in over it on hover", async ({ page }) => {
     await page.goto("/?x=1");
-    await expect(page.locator('section img[src="/mist-static.webp"]')).toBeVisible();
-    await page.waitForTimeout(1500);
+    const still = page.locator('section img[src="/mist-static.webp"]');
+    const opacity = (el: import("@playwright/test").Locator) => el.evaluate((node) => getComputedStyle(node).opacity);
+    await expect(still).toBeVisible();
+    await expect.poll(() => page.locator("section [aria-hidden=true]:has(img)").first().evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+    await page.waitForTimeout(1000);
     await expect(page.locator("section canvas")).toHaveCount(0);
     await hoverHero(page);
     await expect(page.locator("section canvas")).toHaveCount(1);
-    await expect(page.locator('section img[src="/mist-static.webp"]')).toHaveCount(0);
+    await expect.poll(() => opacity(page.locator("section div:has(> canvas)").locator(".."))).toBe("1");
+    await expect.poll(() => opacity(still.locator(".."))).toBe("0");
   });
 
   test("the canvas is decorative, never takes input, sits under the button and is masked low", async ({ page }) => {

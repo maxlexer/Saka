@@ -19,7 +19,6 @@ uniform vec2 uSwirl;
 uniform float uForce;
 uniform float uRadius;
 uniform vec4 uKeepA;
-uniform vec4 uKeepB;
 uniform vec4 uBottle;
 uniform vec4 uText;
 
@@ -86,8 +85,8 @@ void main() {
   cap = min(cap, mix(1.0, 0.3, rectMask(px, uBottle, 40.0 * uScale)));
   cap = min(cap, mix(1.0, 0.15, rectMask(px, uText, 40.0 * uScale)));
 
-  // Buttons are never covered. The boxes already include 16px padding.
-  float keep = max(rectMask(px, uKeepA, 24.0 * uScale), rectMask(px, uKeepB, 24.0 * uScale));
+  // The button is never covered. Its box already includes 16px padding.
+  float keep = rectMask(px, uKeepA, 24.0 * uScale);
 
   float a = density * cap * (1.0 - keep);
   outColor = vec4(col * a, a);

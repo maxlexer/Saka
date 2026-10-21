@@ -61,6 +61,8 @@
 
 html {
   background: var(--bg);
+  /* Locking scroll (intro, dialogs) must not change the width, or centered content would shift where scrollbars take room. */
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
   scroll-padding-top: 5rem;
 }

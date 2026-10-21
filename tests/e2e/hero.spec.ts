@@ -42,7 +42,7 @@ test("the dark floor shows when the theme is dark, and fades in when switched", 
   await expect.poll(() => dark.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
 });
 
-test("the hero never blocks vertical scrolling", async ({ page }) => {
+test("the hero never blocks vertical scrolling or pinch zoom", async ({ page }) => {
   await page.goto("/?x=1");
-  expect(await page.locator("section").first().evaluate((el) => getComputedStyle(el).touchAction)).toBe("pan-y");
+  expect(await page.locator("section").first().evaluate((el) => getComputedStyle(el).touchAction)).toBe("pan-y pinch-zoom");
 });

@@ -25,7 +25,8 @@ export function Intro({ logo }: { logo: ReactNode }) {
     let stop: (() => void) | undefined;
     // The timeline is its own chunk, off the first load. The overlay below is server HTML and covers the page until it runs.
     import("@/lib/intro").then(({ playIntro }) => {
-      if (live) stop = playIntro({ overlay, backdrop, mark, stage, skip, bottle }, end);
+      // The failsafe may have revealed the page while the chunk was loading. Then there is nothing to play.
+      if (live && root.classList.contains(PENDING)) stop = playIntro({ overlay, backdrop, mark, stage, skip, bottle }, end);
     }, end);
     return () => {
       live = false;
@@ -42,7 +43,7 @@ export function Intro({ logo }: { logo: ReactNode }) {
       <div ref={stage} aria-hidden="true" className="absolute opacity-0">
         <SpinBottle ref={bottle} dir="/hero" alt="" className="h-full" />
       </div>
-      <button ref={skip} type="button" className="absolute inset-x-0 bottom-8 mx-auto min-h-11 w-fit px-4 font-display text-[13px] font-medium text-muted opacity-0">
+      <button ref={skip} type="button" aria-label="Skip intro" className="absolute inset-x-0 bottom-8 mx-auto min-h-11 w-fit px-4 font-display text-[13px] font-medium text-muted opacity-0">
         Skip
       </button>
     </div>

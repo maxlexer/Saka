@@ -9,11 +9,10 @@ test.describe("mist alpha caps and keep-out (real shader, no browser UI)", () =>
 
   test("respects 0.55 overall, 0.3 over the bottle, 0.15 behind text and 0 inside keep-out boxes", async ({ page }) => {
     await page.goto("about:blank");
-    const boxes: Record<"bottle" | "text" | "keepA" | "keepB", Box> = {
+    const boxes: Record<"bottle" | "text" | "keepA", Box> = {
       bottle: [320, 140, 480, 400],
       text: [240, 420, 560, 480],
       keepA: [260, 40, 395, 100],
-      keepB: [405, 40, 540, 100],
     };
     for (const time of [0, 13, 40, 97]) {
       const { stats } = await renderMist(page, { width: 800, height: 500, time, scale: 0.5, boxes });
@@ -22,7 +21,6 @@ test.describe("mist alpha caps and keep-out (real shader, no browser UI)", () =>
       expect(stats.bottle).toBeLessThanOrEqual(0.3 + STEP);
       expect(stats.text).toBeLessThanOrEqual(0.15 + STEP);
       expect(stats.keepA).toBeLessThanOrEqual(STEP);
-      expect(stats.keepB).toBeLessThanOrEqual(STEP);
     }
   });
 

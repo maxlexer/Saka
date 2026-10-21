@@ -90,6 +90,24 @@ test("the failsafe reveals the page when no script bundle loads", async ({ page 
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 });
 
+test("a timeline chunk that arrives after the failsafe never locks the revealed page", async ({ page }) => {
+  // Holds back only the timeline chunk, recognised by a selector only it contains.
+  await page.route("**/_next/static/chunks/*.js", async (route) => {
+    const response = await route.fetch();
+    const body = await response.text();
+    if (body.includes("body > .skip-link")) await new Promise((resolve) => setTimeout(resolve, 8000));
+    await route.fulfill({ response, body });
+  });
+  await page.goto("/");
+  await ended(page, 9000);
+  const mist = page.locator("section").first().locator("[aria-hidden=true]:has(img)").first();
+  await expect.poll(() => mist.evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
+  await page.waitForTimeout(3000);
+  await expect(page.locator("main > section").first()).not.toHaveAttribute("inert", "");
+  expect(await page.evaluate(() => document.documentElement.style.overflow)).toBe("");
+  await expect(page.locator(".intro-overlay")).toBeHidden();
+});
+
 test("reduced motion has no intro", async ({ browser }) => {
   const context = await browser.newContext({ reducedMotion: "reduce" });
   const page = await context.newPage();

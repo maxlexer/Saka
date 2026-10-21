@@ -8,7 +8,7 @@ import { fragment, vertex } from "@/lib/mist-shader";
 const ZERO: Box = [0, 0, 0, 0];
 const palette = () => (document.documentElement.dataset.theme === "dark" ? MIST_COLORS_DARK : MIST_COLORS).map(hexToRgb);
 
-export default function Mist({ onFail }: { onFail: () => void }) {
+export default function Mist({ onReady, onFail }: { onReady: () => void; onFail: () => void }) {
   const holder = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +28,12 @@ export default function Mist({ onFail }: { onFail: () => void }) {
       return onFail();
     }
     const gl = renderer.gl;
-    if (!renderer.isWebgl2) return onFail();
+    // OGL falls back to WebGL1 by itself, so a refused context is released before giving up.
+    const giveUp = () => {
+      gl.getExtension("WEBGL_lose_context")?.loseContext();
+      onFail();
+    };
+    if (!renderer.isWebgl2) return giveUp();
 
     const [colA, colB, colC] = palette();
     const uniforms = {
@@ -43,12 +48,11 @@ export default function Mist({ onFail }: { onFail: () => void }) {
       uForce: { value: 0 },
       uRadius: { value: 160 * renderer.dpr },
       uKeepA: { value: ZERO },
-      uKeepB: { value: ZERO },
       uBottle: { value: ZERO },
       uText: { value: ZERO },
     };
     const program = new Program(gl, { vertex, fragment, uniforms, transparent: true, depthTest: false, depthWrite: false });
-    if (!gl.getProgramParameter(program.program, gl.LINK_STATUS)) return onFail();
+    if (!gl.getProgramParameter(program.program, gl.LINK_STATUS)) return giveUp();
     const mesh = new Mesh(gl, { geometry: new Triangle(gl), program });
 
     // Keep-out box, bottle and text, recomputed whenever the hero or its contents change size.
@@ -102,6 +106,7 @@ export default function Mist({ onFail }: { onFail: () => void }) {
     let last = 0;
     let visible = true;
     let running = false;
+    let drawn = false;
 
     const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
@@ -124,6 +129,10 @@ export default function Mist({ onFail }: { onFail: () => void }) {
       uniforms.uSwirl.value = [swirl.x, swirl.y];
       uniforms.uTime.value = MIST_STILL_TIME + (now - born) / 1000;
       renderer.render({ scene: mesh });
+      if (!drawn) {
+        drawn = true;
+        onReady();
+      }
     };
     const start = () => {
       if (running || !visible || document.hidden) return;
@@ -160,7 +169,7 @@ export default function Mist({ onFail }: { onFail: () => void }) {
       gl.getExtension("WEBGL_lose_context")?.loseContext();
       canvas.remove();
     };
-  }, [onFail]);
+  }, [onReady, onFail]);
 
   return <div ref={holder} className="absolute inset-0" />;
 }

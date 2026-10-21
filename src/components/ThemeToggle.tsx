@@ -21,7 +21,8 @@ function setDark(dark: boolean) {
   } catch {
     // Storage can be blocked. The choice then lasts until the next page load.
   }
-  window.setTimeout(() => root.classList.remove("theme-fade"), 500);
+  // A little longer than the 500ms fades, so removing the class never cuts their last frame.
+  window.setTimeout(() => root.classList.remove("theme-fade"), 600);
 }
 
 export function ThemeToggle() {

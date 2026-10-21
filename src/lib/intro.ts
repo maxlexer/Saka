@@ -1,12 +1,15 @@
 import type { RefObject } from "react";
 import type { SpinHandle } from "@/components/SpinBottle";
 import { gsap, MOTION } from "./gsap";
+import { INTRO_FAILSAFE } from "./head-script";
 
 type Ref<T> = RefObject<T | null>;
 export type IntroParts = { overlay: Ref<HTMLDivElement>; backdrop: Ref<HTMLDivElement>; mark: Ref<HTMLDivElement>; stage: Ref<HTMLDivElement>; skip: Ref<HTMLButtonElement>; bottle: Ref<SpinHandle> };
 
 /** Plays the intro over the server-rendered overlay. `end` reveals the page. Returns the cleanup. */
 export function playIntro({ overlay, backdrop, mark, stage, skip, bottle }: IntroParts, end: () => void) {
+  // From here the timeline owns the reveal, so the head script's failsafe can no longer cut it mid-play.
+  clearTimeout((window as unknown as Record<string, number>)[INTRO_FAILSAFE]);
   const mm = gsap.matchMedia();
   mm.add("(prefers-reduced-motion: reduce)", end);
   mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -19,7 +22,8 @@ export function playIntro({ overlay, backdrop, mark, stage, skip, bottle }: Intr
     // The overlay lives inside main, so everything around it goes inert instead of main itself.
     const guarded = [...document.querySelectorAll<HTMLElement>("body > .skip-link, body > header, body > footer, main > :not(.intro-overlay)")];
     // Headline, then button, then header.
-    const reveal = [...document.querySelectorAll<HTMLElement>("main [data-intro-hide], body > header")];
+    const header = document.querySelector<HTMLElement>("body > header");
+    const reveal = [...document.querySelectorAll<HTMLElement>("main [data-intro-hide]"), ...(header ? [header] : [])];
     const width = window.innerWidth;
     let done = false;
     let ready = false;
@@ -43,10 +47,14 @@ export function playIntro({ overlay, backdrop, mark, stage, skip, bottle }: Intr
     };
 
     let tl: gsap.core.Timeline | undefined;
+    // Only ever called after the listeners below are attached: by an event, the sprite promise or the timeline.
     const finish = (fade = false) => {
       if (done) return;
       done = true;
       tl?.kill();
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
+      button?.removeEventListener("click", onSkip);
       if (fade) {
         gsap.set(overlay.current, { display: "block" });
         gsap.to(overlay.current, { opacity: 0, duration: 0.4, ease: "power1.out", onComplete: () => void gsap.set(overlay.current, { display: "none" }) });
@@ -89,12 +97,7 @@ export function playIntro({ overlay, backdrop, mark, stage, skip, bottle }: Intr
     window.addEventListener("keydown", onKey);
     window.addEventListener("resize", onResize);
     button?.addEventListener("click", onSkip);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      window.removeEventListener("resize", onResize);
-      button?.removeEventListener("click", onSkip);
-      finish();
-    };
+    return () => finish();
   });
   return () => mm.revert();
 }

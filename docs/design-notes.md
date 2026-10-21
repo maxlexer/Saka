@@ -250,7 +250,7 @@ UI-UX-Pro-Max queries: ambient background canvas performance (ux), ambient atmos
 - Plan 04's shader, math and cap harness are reused as written, plus the dark palette (#23261C, #3A3A2C, #8C7964), which swaps on the theme switch through a MutationObserver without a reload.
 - The OGL chunk loads with `React.lazy`, like the product modal and cart drawer, not `next/dynamic`, which would add its loader to the first load. Initial JavaScript on `/` is now 169.2KB.
 - Each mount creates its own canvas. The cleanup loses the WebGL context, so a remount (React's dev double mount, or any remount) on the same canvas got the dead context back and fell to the static image.
-- Static fallbacks are captured from the real shader at 800 by 500 (fog has no fine detail): 46KB light, 27KB dark. Both are lazy, so the hidden theme's image never downloads.
+- Static fallbacks are rendered from the real shader at 1600 by 1000, then saved at 800 by 500 (fog has no fine detail): 46KB light, 27KB dark. Both are lazy, so the hidden theme's image never downloads.
 - The plan's budget spec change (skipping scripts that contain the shader) was left out: the budget counts only scripts named in the page's HTML, and the lazy mist chunk is never one of them.
 
 ## R3 intro
@@ -283,3 +283,20 @@ What the first pass showed and what changed:
 - The intro timeline moved to its own chunk (see "R3 intro"), so the intro adds under 0.5KB to the first load.
 - The LCP element is the light floor: in the first HTML, `fetchpriority=high`, eager, observed paint at 190ms. The simulated LCP miss is the one plan 03 recorded: Lighthouse's slow 4G model shares bandwidth between the image and the framework scripts. The floor in this build is a working copy graded from a thumbnail; measure again once the full size backdrop is in.
 - Mist guard: on an emulated Pixel 7 the live shader starts on tap at 1x to 4x CPU throttling and keeps running (its cost is GPU work, which CPU throttling does not slow, so the 45ms guard never trips). At 6x the main thread is never idle, so the shader never starts and the still stays. The guard logic is unit tested; a real low-end phone is still to be checked by hand.
+
+## R3 code review decisions
+
+A subagent reviewed `8d8909a..d053969`: no critical findings, six important ones, all fixed.
+
+- Reveal order is now headline, then button, then header (the header comes first in the document, so the list is built in that order explicitly). Sampled start times: 4.66s, 4.80s, 4.96s.
+- `scrollbar-gutter: stable` on `html`. The scroll lock removed the classic Windows scrollbar before the hero was measured, so the bottle jumped about 11px at the hand-off when the scrollbar came back. With scrollbars shown (headless Chromium hides them), the glide now lands 0.00px from the hero bottle. It also keeps dialogs from shifting the page.
+- The failsafe and the timeline are coordinated. The head script keeps its timer on `window.sakaIntroFailsafe`, the timeline clears it once it owns the reveal, the failsafe itself dispatches `saka:intro-end` so the mist still fades in, and a timeline chunk that arrives after the failsafe does nothing. A spec holds the chunk back 8s to prove the page stays unlocked.
+- The live mist crossfades over the still (0.8s) once its first frame is drawn, instead of swapping, so it never blanks and the different noise framing on phones blends rather than jumps. The still is shown at 55 percent: its caps were baked for the desktop layout, and 0.55 of a 0.55 edge cap stays under the 0.3 bottle cap on any layout.
+- The hero allows pinch zoom (`touch-action: pan-y pinch-zoom`). `pan-y` alone blocked zoom on the whole first screen on phones.
+- Smaller fixes: intro listeners detach as soon as it ends; Skip is named "Skip intro" for screen readers; failed WebGL paths release their context; the unused second keep-out box left the shader; the theme fade class now outlives its 500ms transitions (600ms).
+- Kept as they are, with reasons:
+  - `Intro.tsx` uses `useEffect` plus `gsap.matchMedia().revert()` rather than `useGSAP`, because the timeline lives in a lazily imported module. The cleanup is the same.
+  - Unmounting home before the timeline chunk arrives (only possible by tabbing to a header link behind the overlay) leaves the header hidden until the 7s failsafe. Ending the intro on that cleanup would also end it in React's dev double mount.
+  - After Skip, focus falls back to the document start. Moving it to a page element was judged more surprising than helpful.
+  - No `react-dom` `preload` for the light floor: its `img` is early in the server HTML with high fetch priority, and a preload hint would also fire whenever another page prefetches home. Dark mode visitors still download the light floor under the dark one; the first switch to dark fades an image that may still be loading.
+  - The intro timing specs assume a warm local server. `.impeccable/config.json` holds the one narrow design-hook ignore (spread `src` on the floor images) and stays in the repo.

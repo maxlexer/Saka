@@ -193,3 +193,9 @@ dialog[data-closing]::backdrop { background: rgba(23, 26, 18, 0); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after, ::backdrop { transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+
+/* Intro contract: the head script adds `intro-pending` on a plain hard load of home. Without JavaScript it never does. */
+.intro-overlay { display: none; }
+html.intro-pending .intro-overlay { display: block; }
+html.intro-pending [data-intro-hide],
+html.intro-pending [data-hero-bottle] { opacity: 0; }

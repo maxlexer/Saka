@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 import { SOLD_OUT } from "./helpers";
 
-const PATHS = ["/", "/products", "/checkout", "/admin/login", "/nope"];
+const PATHS = ["/?x=1", "/products", "/checkout", "/admin/login", "/nope"];
 const serious = (violations: { impact?: string | null }[]) => violations.filter((v) => v.impact === "serious" || v.impact === "critical");
 
 for (const path of PATHS) {

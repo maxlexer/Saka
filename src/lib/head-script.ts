@@ -1,4 +1,10 @@
 export const THEME_KEY = "saka.theme";
 
-/** Runs before first paint. Light is the default. Dark only when the visitor chose it on this device. */
-export const HEAD_SCRIPT = `try{if(localStorage.getItem("${THEME_KEY}")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}`;
+/**
+ * Runs before first paint. Light is the default, dark only when the visitor chose it on this device.
+ * A plain hard load of the home page (no hash, no query, motion allowed) gets the intro, and the
+ * failsafe always reveals the page even if no script bundle ever runs.
+ */
+export const HEAD_SCRIPT =
+  `try{if(localStorage.getItem("${THEME_KEY}")==="dark")document.documentElement.dataset.theme="dark"}catch(e){}` +
+  `try{var d=document.documentElement,l=location;if(l.pathname==="/"&&!l.hash&&!l.search&&!matchMedia("(prefers-reduced-motion: reduce)").matches){d.classList.add("intro-pending");setTimeout(function(){d.classList.remove("intro-pending")},7000)}}catch(e){}`;

@@ -252,3 +252,13 @@ UI-UX-Pro-Max queries: ambient background canvas performance (ux), ambient atmos
 - Each mount creates its own canvas. The cleanup loses the WebGL context, so a remount (React's dev double mount, or any remount) on the same canvas got the dead context back and fell to the static image.
 - Static fallbacks are captured from the real shader at 800 by 500 (fog has no fine detail): 46KB light, 27KB dark. Both are lazy, so the hidden theme's image never downloads.
 - The plan's budget spec change (skipping scripts that contain the shader) was left out: the budget counts only scripts named in the page's HTML, and the lazy mist chunk is never one of them.
+
+## R3 intro
+
+UI-UX-Pro-Max queries: intro animation skip button (ux), page load sequence (gsap; "timeline choreography" had no match). Applied: the visitor is never locked in (Skip, Escape, Enter), the next step's asset loads during the current one (the sprite loads under the logo), the skip exit (0.4s) is faster than the entrance, and reduced motion gets the final state with no intro.
+
+- Timing as the spec: logo 0 to 1s, a centered turn 1 to 3s, a 1.2s glide onto the hero bottle's measured rect from 3s as the floor dissolves in, content fades up from 3.8s, hand-off at 4.2s. Frame captures at 390 and 1280px in both themes show no jump at the hand-off, and the spec checks the glide lands within 1px.
+- The overlay is server HTML placed before the hero, so it covers the page from first paint. Its timeline (`src/lib/intro.ts`) is a separate chunk imported on mount, which keeps `/` at 169.5KB. Lazy-loading the whole component was tried and rejected: React streamed the overlay as a late segment after the hero and footer, so a slow connection could paint the floor first.
+- The logo is passed in from the server page, so its paths ship as HTML, not code.
+- Deviations from the plan's snippet: the overlay sits inside `main`, so `main`'s other children, the header, footer and skip link go inert, not `main` itself (that would have made Skip unclickable). Only a width change ends the intro, because phones fire resize when the address bar moves. Skip takes focus without a ring (Enter and Escape work globally, Tab still shows the ring) and fades out as the glide starts, so it never overlaps the hero button on phones.
+- Specs that interact with home load `/?x=1`, `/#finder` or `/#collection`, which skip the intro. The SEO spec keeps plain `/`.

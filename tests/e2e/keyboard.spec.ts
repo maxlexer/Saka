@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("the skip link is the first tab stop and jumps to main", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?x=1");
   await page.keyboard.press("Tab");
   const skip = page.getByRole("link", { name: "Skip to content" });
   await expect(skip).toBeFocused();
@@ -11,7 +11,7 @@ test("the skip link is the first tab stop and jumps to main", async ({ page }) =
 });
 
 test("the cart drawer opens by keyboard, traps focus, closes on Escape and returns focus", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/?x=1");
   const cart = page.getByRole("button", { name: /Open cart/ });
   await cart.focus();
   await page.keyboard.press("Enter");
@@ -30,7 +30,7 @@ test("the cart drawer opens by keyboard, traps focus, closes on Escape and retur
 
 test("the mobile menu closes on Escape and restores focus", async ({ page, isMobile }) => {
   test.skip(!isMobile, "The menu button only exists below 1024px");
-  await page.goto("/");
+  await page.goto("/?x=1");
   const menu = page.getByRole("button", { name: "Open menu" });
   await menu.focus();
   await page.keyboard.press("Enter");
@@ -41,7 +41,7 @@ test("the mobile menu closes on Escape and restores focus", async ({ page, isMob
   await expect(menu).toBeFocused();
 });
 
-for (const path of ["/", "/products"]) {
+for (const path of ["/?x=1", "/products"]) {
   test(`every interactive control on ${path} is at least 44px in both directions`, async ({ page }) => {
     await page.goto(path);
     const small = await page.evaluate(() =>

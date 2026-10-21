@@ -12,7 +12,7 @@ test("initial state shows the prompt and no results", async ({ page }) => {
 });
 
 test("chips filter with OR inside a group and AND across groups", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#finder");
   await chip(page, "Vibe", "Calm").click();
   await expect(page.locator("#finder").getByText(/^\d+ scents match$/)).toBeVisible();
   const calm = await results(page).count();
@@ -27,7 +27,7 @@ test("chips filter with OR inside a group and AND across groups", async ({ page 
 });
 
 test("the selection is mirrored to the URL and restored on load", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#finder");
   await chip(page, "Vibe", "Calm").click();
   await expect(page).toHaveURL(/vibe=calm/);
   await page.reload();
@@ -48,7 +48,7 @@ test("an impossible combination offers close matches, and clear all resets", asy
 });
 
 test("a chip works with the keyboard and the count is announced politely", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#finder");
   const calm = chip(page, "Vibe", "Calm");
   await calm.focus();
   await page.keyboard.press("Space");

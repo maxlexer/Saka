@@ -16,7 +16,7 @@ test("a card opens the modal in place, the URL can be shared, and Back closes it
 });
 
 test("the home preview opens the modal on the home page", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/#collection");
   await page.locator('#collection a[href*="scent="]').first().click();
   await expect(page).toHaveURL(/^http:\/\/localhost:3100\/\?scent=/);
   await expect(page.getByRole("dialog")).toBeVisible();

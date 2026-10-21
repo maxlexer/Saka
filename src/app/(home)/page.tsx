@@ -4,6 +4,8 @@ import { EmptyShelf } from "@/components/EmptyShelf";
 import { FadeUp } from "@/components/FadeUp";
 import { Finder } from "@/components/Finder";
 import { Hero } from "@/components/Hero";
+import { Intro } from "@/components/Intro";
+import { Logo } from "@/components/Logo";
 import { ArrowIcon } from "@/components/Icons";
 import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
@@ -20,6 +22,7 @@ export default async function HomePage() {
   const { products, prices } = await getCatalog();
   return (
     <>
+      <Intro logo={<Logo className="h-auto w-[220px] md:w-[320px]" />} />
       <JsonLd data={localBusiness(STORE, SITE_URL)} />
       <Hero />
       <section id="collection" aria-labelledby="collection-title" className="section">

@@ -5,7 +5,7 @@ import { renderMist } from "./lib/mist-harness.ts";
 
 // Approximate desktop hero regions in canvas pixels (origin bottom left), so the caps are baked into the fallback.
 const boxes: Record<"bottle" | "text" | "keepA", Box> = {
-  bottle: [800, 120, 1260, 720],
+  bottle: [672, 10, 1440, 970],
   text: [110, 450, 760, 660],
   keepA: [110, 300, 420, 400],
 };

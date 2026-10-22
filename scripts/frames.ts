@@ -27,7 +27,7 @@ export async function writeBottle(frames: Buffer[], outDir: string) {
 export const placeholderFrames = () =>
   Promise.all(
     Array.from({ length: FRAMES }, (_, i) =>
-      sharp(Buffer.from(bottleSvg({ width: 768, height: 960, angle: (360 / FRAMES) * i, tick: i, ticks: FRAMES, backdrop: false }))).png().toBuffer(),
+      sharp(Buffer.from(bottleSvg({ width: 768, height: 960, angle: (360 / FRAMES) * i, backdrop: false }))).png().toBuffer(),
     ),
   );
 

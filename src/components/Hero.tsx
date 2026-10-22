@@ -23,21 +23,24 @@ export function Hero() {
       {/* Hidden in light mode, so it only downloads once dark is chosen. */}
       <img {...floor("dark")} className={`floor-dark hidden opacity-0 dark:block dark:opacity-100 ${FLOOR}`} />
 
-      <div className="wrap relative z-10 flex h-full flex-col items-start justify-between pb-12 pt-14 lg:justify-center lg:gap-10 lg:py-0">
-        <h1 id="hero-title" data-intro-hide data-mist-text className="h1 max-w-[16ch] text-balance lg:max-w-[20ch]">
+      {/* No z-index on the column itself: text sits above the mist (z-5), the bottle below it (z-1). */}
+      <div className="wrap flex h-full flex-col items-start pb-12 pt-14 lg:justify-center lg:gap-10 lg:py-0">
+        <h1 id="hero-title" data-intro-hide data-mist-text className="h1 relative z-10 max-w-[16ch] text-balance lg:max-w-[20ch]">
           Find the scent that feels like you.
         </h1>
-        <div data-intro-hide>
+
+        {/* The bottle is the hero. On phones it fills every pixel between headline and button, overflowing into the
+            transparent margin of its own image. On desktop the box spans 32 to 100 percent, so it stands at 66 percent. */}
+        <div className="relative z-[1] my-4 flex min-h-0 w-full flex-1 justify-center lg:absolute lg:bottom-[1%] lg:left-[32%] lg:right-0 lg:my-0 lg:h-[96%] lg:w-auto lg:flex-none">
+          <div data-hero-bottle className="absolute bottom-0 aspect-[4/5] h-[112%] lg:h-full">
+            <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority skeleton={false} className="h-full" />
+          </div>
+        </div>
+
+        <div data-intro-hide className="relative z-10">
           <Link href="/products" className="btn btn-primary">
             View products <ArrowIcon width={18} height={18} />
           </Link>
-        </div>
-      </div>
-
-      {/* Centered by layout: on desktop the box spans 32 to 100 percent, so the bottle stands at 66 percent. */}
-      <div className="absolute inset-x-0 bottom-[13%] z-[1] flex h-[44%] justify-center lg:bottom-[11%] lg:left-[32%] lg:h-[58%]">
-        <div data-hero-bottle className="aspect-[4/5] h-full">
-          <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority skeleton={false} className="h-full" />
         </div>
       </div>
 

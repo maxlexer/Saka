@@ -90,8 +90,9 @@ export function SpinBottle({ dir, alt, priority = false, float = false, skeleton
       .set(layer, { opacity: 1, backgroundPosition: framePosition(0) })
       .set(still.current, { opacity: 0 })
       .to(state, { frame: FRAMES, duration, ease: "power2.inOut", onUpdate: () => { layer.style.backgroundPosition = framePosition(state.frame); } })
-      .to(layer, { opacity: 0, duration: 0.35, ease: "power1.out" })
-      .to(still.current, { opacity: 1, duration: 0.35, ease: "power1.out" }, "<");
+      // The still returns fully opaque under the last frame before the sprite fades, so the bottle never thins out mid swap.
+      .set(still.current, { opacity: 1 })
+      .to(layer, { opacity: 0, duration: 0.35, ease: "power1.out" });
   });
 
   useImperativeHandle(

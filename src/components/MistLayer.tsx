@@ -6,10 +6,10 @@ import { gsap, useGSAP } from "@/lib/gsap";
 // OGL and the shader stay out of the first load.
 const Mist = lazy(() => import("./Mist"));
 
-/** The mask keeps the smoke low over the floor, fading out above roughly 75 percent of the hero height. */
-const MASK = "[mask-image:linear-gradient(to_top,black_35%,transparent_75%)]";
-// The still's caps were baked for the desktop layout. At 75 percent it stays bold on phones, where the bottle sits elsewhere.
-const STILL = "h-full w-full object-cover opacity-75";
+/** The smoke itself lies on the floor; the mask is a backstop, fading anything stirred up out above 75 percent of the hero height. */
+const MASK = "[mask-image:linear-gradient(to_top,black_50%,transparent_80%)]";
+// The stills are painted on the floor picture's frame and cropped the same way, so their smoke rests on its floor line.
+const STILL = "h-full w-full object-cover object-top";
 const FADE = { duration: 0.8, ease: "power1.inOut" };
 
 /**

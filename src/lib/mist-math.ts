@@ -6,6 +6,21 @@ export const MIST_COLORS_DARK = ["#8C7964", "#BDAE9B", "#DCD0BF"] as const;
 /** Shader time of the captured still. The live mist starts its clock here, so swapping the still for the canvas does not jump. */
 export const MIST_STILL_TIME = 40;
 
+/** The hero floor picture: its size and the horizon as a share of its height from the top. */
+export const FLOOR_SIZE = [2400, 1600] as const;
+export const FLOOR_HORIZON = 0.5656;
+
+/**
+ * Where the floor picture lands over a width by height hero (object-fit cover, pinned to the top), as
+ * [left, bottom, width, height] in the same pixels with the y axis up. The smoke is laid out in this frame, so it rests
+ * on the floor whatever the screen shape.
+ */
+export function floorFrame(width: number, height: number): Box {
+  const scale = Math.max(width / FLOOR_SIZE[0], height / FLOOR_SIZE[1]);
+  const [w, h] = [FLOOR_SIZE[0] * scale, FLOOR_SIZE[1] * scale];
+  return [(width - w) / 2, height - h, w, h];
+}
+
 export function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
   return [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];

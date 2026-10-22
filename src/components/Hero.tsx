@@ -14,7 +14,8 @@ const floor = (theme: "light" | "dark") =>
     ...(theme === "light" ? { loading: "eager", fetchPriority: "high" } : { loading: "lazy" }),
   }).props;
 
-const FLOOR = "-z-10 object-cover object-[50%_70%]";
+// Top-aligned: the horizon sits at 57 percent of the scaled image, and the unused bottom of the picture is cropped.
+const FLOOR = "-z-10 object-cover object-top";
 
 export function Hero() {
   return (

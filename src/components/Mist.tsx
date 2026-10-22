@@ -2,7 +2,7 @@
 
 import { Mesh, Program, RenderTarget, Renderer, Texture, Triangle, type OGLRenderingContext } from "ogl";
 import { useEffect, useRef } from "react";
-import { createBudget, hexToRgb, MIST_COLORS, MIST_COLORS_DARK, MIST_STILL_TIME, toCanvasRect, type Box } from "@/lib/mist-math";
+import { createBudget, floorFrame, hexToRgb, MIST_COLORS, MIST_COLORS_DARK, MIST_STILL_TIME, toCanvasRect, type Box } from "@/lib/mist-math";
 import * as shader from "@/lib/mist-shader";
 
 const ZERO: Box = [0, 0, 0, 0];
@@ -22,11 +22,12 @@ const RADIUS = { mouse: 84, touch: 64 };
 const MAX_SPEED = 2400;
 // Vorticity confinement: keeps curls alive that the coarse air grid would smear out.
 const SWIRL = 1.2;
-// The resting sway: its strength (air cells per second squared) and the size of its waves (air cells).
-const SWAY = 0.8;
+// The resting sway: its strength (air cells per second squared) and the size of its waves (air cells). Barely there:
+// the resting smoke drifts by itself, and a strong sway kept folding it into marbled creases.
+const SWAY = 0.15;
 const SWAY_SIZE = 48;
-// Seconds for stirred smoke to settle back towards its resting shape. Slow enough to never read as smoke appearing.
-const SETTLE = 45;
+// Seconds for stirred smoke to settle back onto the floor, so folds never build up. Slow enough to never read as smoke appearing.
+const SETTLE = 10;
 // How fast sharp bends in the smoke map even out, per second.
 const SOFT = 4;
 
@@ -111,6 +112,7 @@ export default function Mist({ onReady, onFail }: { onReady: () => void; onFail:
       sharpen: pass(shader.sharpen, { ...solid, ...carried, uMoved: { value: moved.texture }, uSoft: { value: 0 }, uSettle: { value: 0 } }),
       display: pass(shader.display(false), {
         uRes: { value: [1, 1] },
+        uFrame: { value: ZERO },
         uScale: { value: renderer.dpr },
         uColA: { value: colA },
         uColB: { value: colB },
@@ -130,7 +132,7 @@ export default function Mist({ onReady, onFail }: { onReady: () => void; onFail:
     const bottleImg = hero.querySelector<HTMLImageElement>("[data-hero-bottle] img");
     bottleImg?.decode().then(() => (bottle.tex.value.image = bottleImg), () => {});
 
-    // Keep-outs, bottle and text, recomputed whenever the hero or its contents change size. A new hero size restarts
+    // The floor frame and keep-outs (bottle and text), recomputed whenever the hero or its contents change size. A new hero size restarts
     // the smoke from rest: resized targets come back zero filled, which is still air and the smoke at rest.
     const measure = () => {
       const box = hero.getBoundingClientRect();
@@ -138,6 +140,7 @@ export default function Mist({ onReady, onFail }: { onReady: () => void; onFail:
       const rectOf = (el: Element | null, pad = 0) => (el ? toCanvasRect(el.getBoundingClientRect(), box, renderer.dpr, pad) : ZERO);
       const d = passes.display.uniforms;
       d.uRes.value = [gl.canvas.width, gl.canvas.height];
+      d.uFrame.value = floorFrame(box.width, box.height).map((v) => v * renderer.dpr) as Box;
       d.uKeepA.value = rectOf(hero.querySelector("a.btn"), 16);
       d.uBottle.value = rectOf(hero.querySelector("[data-hero-bottle]"));
       d.uText.value = rectOf(hero.querySelector("[data-mist-text]"));

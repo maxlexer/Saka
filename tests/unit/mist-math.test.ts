@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createBudget, hexToRgb, toCanvasRect } from "@/lib/mist-math";
+import { createBudget, floorFrame, hexToRgb, toCanvasRect } from "@/lib/mist-math";
 
 describe("hexToRgb", () => {
   it("converts a palette hex to 0 to 1 channels", () => {
@@ -17,6 +17,15 @@ describe("toCanvasRect", () => {
   });
   it("accounts for the hero offset on the page", () => {
     expect(toCanvasRect({ left: 110, right: 130, top: 520, bottom: 540 }, { left: 100, top: 500, height: 100 }, 1)).toEqual([10, 60, 30, 80]);
+  });
+});
+
+describe("floorFrame", () => {
+  it("fills the width of a wide hero and crops the bottom", () => {
+    expect(floorFrame(2400, 1000)).toEqual([0, -600, 2400, 1600]);
+  });
+  it("fills the height of a tall hero, centered, with nothing cropped vertically", () => {
+    expect(floorFrame(400, 800)).toEqual([-400, 0, 1200, 800]);
   });
 });
 

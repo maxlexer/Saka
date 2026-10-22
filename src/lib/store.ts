@@ -2,6 +2,8 @@
 export const STORE = {
   name: "SAKA Parfum",
   address: "12 Sample Street, Phnom Penh",
+  /** Shown beside the map pin in the header. */
+  city: "Phnom Penh",
   hours: [{ days: "Wednesday to Monday", open: "12:45", close: "19:00" }],
   phone: "+855 12 000 000",
   mapUrl: "https://maps.app.goo.gl/sample",

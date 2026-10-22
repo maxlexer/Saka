@@ -9,6 +9,9 @@
  * frame: advect, curl, force, divergence, pressure (repeated), gradient, carry, sharpen, then display.
  */
 
+// With its extension, so the capture scripts can run this file directly in Node.
+import { FLOOR_HORIZON, FLOOR_SIZE } from "./mist-math.ts";
+
 export const vertex = /* glsl */ `#version 300 es
 in vec2 position;
 void main() {
@@ -23,11 +26,16 @@ uniform vec2 uTexel;
 out vec4 outColor;
 `;
 
+// An integer hash. The usual fract(sin)-style float hashes round differently at each call site on some GPUs (ANGLE on
+// Direct3D here), so two cells disagreed on the corner they share and the noise jumped along cell edges: seams and
+// hard-edged smudges in the smoke. Integers hash exactly the same everywhere.
 const NOISE = /* glsl */ `
 float hash(vec2 p) {
-  p = fract(p * vec2(123.34, 456.21));
-  p += dot(p, p + 45.32);
-  return fract(p.x * p.y);
+  uvec2 q = uvec2(ivec2(floor(p)) + 32768);
+  uint n = q.x * 1597334673u ^ q.y * 3812015801u;
+  n = (n ^ (n >> 16)) * 2246822519u;
+  n ^= n >> 13;
+  return float(n) / 4294967295.0;
 }
 
 float noise(vec2 p) {
@@ -54,14 +62,30 @@ float fbm(vec2 p) {
   return v;
 }
 
-// The smoke at rest, a doubly warped field. x is its value, y how wispy it is there. uv runs 0 to 1 over the hero.
-vec2 smoke(vec2 uv, vec2 aspect, float time) {
-  vec2 p = uv * aspect * 2.4;
-  float t = time * 0.05;
-  p.y -= t * 1.2;
-  vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, 1.3) - vec2(t * 0.7, 0.0)));
-  vec2 w = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + t * 0.5), fbm(p + 2.6 * q + vec2(8.3, 2.8) - t * 0.4));
-  return vec2(fbm(p + 2.0 * w + vec2(t, 0.0)), smoothstep(0.3, 0.7, length(w)));
+const float HORIZON = ${(1 - FLOOR_HORIZON).toFixed(4)};
+const float WIDE = ${(FLOOR_SIZE[0] / FLOOR_SIZE[1]).toFixed(4)};
+
+// The smoke at rest, lying on the floor. f is the floor picture's uv (y up), so it rests on the floor line whatever the
+// crop. x is how dense it is, y its texture.
+vec2 smoke(vec2 f, float time) {
+  float t = time * 0.04;
+  // Height above the floor line, in picture heights.
+  float h = f.y - HORIZON;
+  // A bank rolls along the floor line. Its billows are wider than tall, and its top edge rises and falls with them.
+  vec2 b = vec2(f.x * WIDE * 5.0, f.y * 12.0);
+  float billow = fbm(b + vec2(t * 1.5, 0.0) + 1.2 * vec2(fbm(b * 0.6 + t), fbm(b * 0.6 + 4.1 - t)));
+  float top = 0.03 + 0.09 * billow;
+  float bank = smoothstep(top, top - 0.07, h) * smoothstep(-0.16, -0.01, h) * mix(0.35, 0.9, billow);
+  // In front of it, patches of smoke drift over the floor in perspective, with bare floor between them: their shapes
+  // flatten and shrink as they recede, and they thin out before the floor line, where the bank takes over.
+  float d = max(-h, 0.0) + 0.05;
+  vec2 g = vec2((f.x - 0.5) * WIDE, 1.0) / d * 0.3;
+  float spread = smoothstep(0.42, 0.78, fbm(g + vec2(t, 0.0) + 0.8 * fbm(g * 1.7 - t))) * smoothstep(-0.02, -0.12, h) * 0.8;
+  // Tendrils curl up off the bank, folded sideways by a second field, and are gone within a sixth of the picture.
+  vec2 r = vec2(f.x * WIDE * 6.0, f.y * 6.0 - t * 3.0);
+  vec2 curl = vec2(fbm(r * 0.7 + t), fbm(r * 0.7 + 3.7 - t));
+  float tendril = smoothstep(0.52, 0.78, fbm(r + 2.2 * curl)) * smoothstep(-0.02, 0.05, h) * smoothstep(0.18, 0.04, h) * 0.55;
+  return vec2(max(bank, max(spread, tendril)), billow);
 }
 `;
 
@@ -297,12 +321,14 @@ void main() {
 
 /**
  * Paints the resting smoke at uTime through the smoke map, with the theme palette, alpha caps and the button keep-out.
+ * uFrame is where the floor picture lands, [left, bottom, width, height] in canvas pixels (see floorFrame).
  * The still (`still` true) paints it at rest, for the captured fallback image and the caps tests.
  */
 export const display = (still: boolean) => /* glsl */ `#version 300 es
 precision highp float;
 
 uniform vec2 uRes;
+uniform vec4 uFrame;
 uniform float uScale;
 uniform vec3 uColA;
 uniform vec3 uColB;
@@ -322,10 +348,10 @@ float rectMask(vec2 p, vec4 r, float feather) {
   return 1.0 - smoothstep(0.0, feather, length(d));
 }
 
-// The same, but the fade follows the smoke's own shapes (wobble), so dense smoke curling past never shows a straight
-// edge or a box. Inside the box it is always 1.
-float zone(vec2 p, vec4 r, float feather, vec2 wobble) {
-  return max(rectMask(p, r, 1.0), rectMask(p + wobble, r, feather));
+// The same, but the fade wobbles, so dense smoke curling past never shows a straight edge or a box. Inside the box it
+// is always 1: the box is grown by the most the wobble can move (reach), so the wobble never pulls it short of the edge.
+float zone(vec2 p, vec4 r, float feather, vec2 wobble, float reach) {
+  return rectMask(p + wobble, r + vec4(-reach, -reach, reach, reach), feather);
 }
 
 void main() {
@@ -333,31 +359,34 @@ void main() {
   float minDim = min(uRes.x, uRes.y);
   vec4 map = ${still ? "vec4(0.0)" : "texture(uMap, px / uRes)"};
   vec2 rest = px / uRes + map.xy;
-  vec2 s = smoke(rest, uRes / minDim, uTime);
-  // Where the air squeezes smoke together, real smoke loses its fine detail to an even haze; painted through the map
-  // the squeezed detail would show as teeth. squeeze is the size of the map's stretch, about 1.4 at rest and under
-  // plain rotation, and grows as the smoke is pressed thin.
-  float squeeze = length(vec4(dFdx(rest) * uRes, dFdy(rest) * uRes));
-  s = mix(s, vec2(0.45, 0.3), smoothstep(2.0, 4.5, squeeze));
+  vec2 s = smoke((rest * uRes - uFrame.xy) / uFrame.zw, uTime);
+  // Where the air squeezes smoke together, real smoke loses its fine detail; painted through the map the squeezed
+  // detail would show as teeth, so it thins and evens out instead. squeeze is the size of the map's stretch, about 1.4
+  // at rest and under plain rotation, and grows as the smoke is pressed thin.
+  float squeeze = smoothstep(2.0, 4.5, length(vec4(dFdx(rest) * uRes, dFdy(rest) * uRes)));
+  s = vec2(s.x * (1.0 - 0.4 * squeeze), mix(s.y, 0.5, squeeze));
 
-  // A thick body with denser curling wisps on top, so it reads as smoke and not haze.
-  float body = smoothstep(0.24, 0.58, s.x);
-  float wisp = smoothstep(0.12, 0.0, abs(s.x - 0.55)) * s.y;
-  float density = clamp(body * 0.85 + wisp * 0.3, 0.0, 1.0) * (1.0 - map.z);
-  vec3 col = mix(uColA, uColB, smoothstep(0.3, 0.55, s.x));
-  col = mix(col, uColC, max(smoothstep(0.55, 0.8, s.x), wisp * 0.6));
+  // Shaded by depth of smoke, never by contour, so it reads as soft volume and not marbled paint: thin edges take the
+  // first tone, the body the second, and the densest billows the third.
+  float density = s.x * (1.0 - map.z);
+  vec3 col = mix(uColA, uColB, smoothstep(0.15, 0.6, density));
+  col = mix(col, uColC, smoothstep(0.55, 1.0, density) * mix(0.4, 1.0, s.y));
 
   // Alpha caps: 0.8 near the hero edges, 0.6 inside, 0.4 over the bottle, 0.15 behind the text.
   float edge = min(min(px.x, uRes.x - px.x), min(px.y, uRes.y - px.y)) / minDim;
   float cap = mix(0.6, 0.8, 1.0 - smoothstep(0.0, 0.22, edge));
   // The bottle box is mostly transparent margin, so the cap hugs its middle third with a wide soft edge, or its sides show as seams.
   vec4 glass = uBottle + vec4(1.0, 0.0, -1.0, 0.0) * (uBottle.z - uBottle.x) * 0.3;
-  vec2 wobble = (s - 0.5) * 90.0 * uScale;
-  cap = min(cap, mix(1.0, 0.4, zone(px, glass, 120.0 * uScale, wobble)));
-  cap = min(cap, mix(1.0, 0.15, zone(px, uText, 80.0 * uScale, wobble)));
+  // Its own noise, since the smoke is empty in clear air and would leave the edges straight there.
+  vec2 n = px / (70.0 * uScale);
+  float reach = 60.0 * uScale;
+  vec2 wobble = (vec2(noise(n), noise(n + 9.1)) * 2.0 - 1.0) * reach;
+  // Blended, not clamped with min: a clamp kinks where it starts to bite, and dense smoke shows the kink as a seam.
+  cap = mix(cap, 0.4, zone(px, glass, 200.0 * uScale, wobble, reach));
+  cap = mix(cap, 0.15, zone(px, uText, 80.0 * uScale, wobble, reach));
 
   // The button is never covered. Its box already includes 16px padding.
-  float keep = zone(px, uKeepA, 64.0 * uScale, wobble);
+  float keep = zone(px, uKeepA, 64.0 * uScale, wobble, reach);
 
   // Half a step of dither: the soft cap ramps change alpha by less than one 8-bit step per pixel, which shows as stripes.
   float a = max(density * cap + (hash(px) - 0.5) / 255.0, 0.0) * (1.0 - keep);

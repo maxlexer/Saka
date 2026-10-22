@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import sharp from "sharp";
 import { renderMist } from "../../scripts/lib/mist-harness.ts";
-import { toCanvasRect } from "../../src/lib/mist-math.ts";
+import { FLOOR_HORIZON, floorFrame, toCanvasRect } from "../../src/lib/mist-math.ts";
 
 // The live shader only starts once a pointer comes over the hero.
 const hoverHero = (page: Page) => page.locator("section").first().hover({ position: { x: 200, y: 400 } });
@@ -30,21 +30,26 @@ test.describe("mist", () => {
     await hoverHero(page);
     const canvas = page.locator("section canvas");
     await expect.poll(() => page.locator("section div:has(> canvas)").locator("..").evaluate((el) => getComputedStyle(el).opacity)).toBe("1");
-    const frame = async () => sharp(await canvas.screenshot()).raw().toBuffer();
+    const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
+    // Through the bank, just in front of the floor line, where the smoke lies thickest. Change is measured in the band
+    // the sweep passes through: the smoke is soft, so counted over the whole hero a real push averages away.
+    const [, bottom, , height] = floorFrame(box.width, box.height);
+    const y = box.y + box.height - (bottom + (1 - FLOOR_HORIZON) * height) + 12;
+    const band = { x: box.x, y: y - 120, width: box.width, height: 240 };
+    const frame = async () => sharp(await page.screenshot({ clip: band })).raw().toBuffer();
     const change = (a: Buffer, b: Buffer) => a.reduce((sum, v, i) => sum + Math.abs(v - b[i]), 0) / a.length;
 
     const before = await frame();
     await page.waitForTimeout(600);
     const resting = await frame();
-    const box = (await canvas.boundingBox()) as { x: number; y: number; width: number; height: number };
-    const y = box.y + box.height * 0.85;
     await page.mouse.move(box.x + 40, y);
     await page.mouse.move(box.x + box.width * 0.6, y, { steps: 24 });
     await page.waitForTimeout(400);
     const swept = await frame();
-    // Nothing boils or fades in place at rest. A sweep moves the smoke many times more than resting does.
+    // Nothing boils or fades in place at rest. A sweep moves the smoke many times more than resting does. The floor of 0.1
+    // is about ten times the change at rest: soft smoke changes few levels per pixel even when pushed well along.
     expect(change(before, resting)).toBeLessThan(1.5);
-    expect(change(resting, swept)).toBeGreaterThan(Math.max(1, change(before, resting) * 4));
+    expect(change(resting, swept)).toBeGreaterThan(Math.max(0.1, change(before, resting) * 4));
   });
 
   test("the canvas is decorative, never takes input, sits under the button and is masked low", async ({ page }) => {

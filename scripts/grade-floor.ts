@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
+import { FLOOR_HORIZON } from "../src/lib/mist-math.ts";
 
 /** Luminance stops, darkest first. Grading through them maps every pixel onto warm palette tones, so no stray hue survives. */
 export const STOPS = {
@@ -21,6 +22,20 @@ export function lut(stops: string[]) {
   return table;
 }
 
+/** Share of brightness the floor keeps, at the horizon and at the bottom edge, so it reads as a plane in shadow under the lit wall. */
+const FLOOR_SHADE = { light: [0.62, 0.5], dark: [0.5, 0.32] };
+
+/**
+ * Share of brightness kept on row y of `height`. `horizon` is the floor line as a share of the height from the top; below
+ * it the floor is shaded, darkest nearest the viewer. The shade comes in over 3 rows, so the line is crisp without stair steps.
+ */
+export function floorShade(theme: "light" | "dark", y: number, height: number, horizon = FLOOR_HORIZON) {
+  const [near, far] = FLOOR_SHADE[theme];
+  const line = horizon * height;
+  const below = Math.min(Math.max((y - line) / 3, 0), 1);
+  return 1 - below * (1 - (near + ((far - near) * Math.max(y - line, 0)) / (height - line)));
+}
+
 export async function gradeFloor(input: string, theme: "light" | "dark", output: string) {
   const gray = sharp(input).resize(2400, 1600, { fit: "cover", position: "attention" }).grayscale();
   // The dark scene is the light photo at dusk, so the bottle stands on the same floor in both themes:
@@ -31,7 +46,8 @@ export async function gradeFloor(input: string, theme: "light" | "dark", output:
   const out = Buffer.alloc(info.width * info.height * 3);
   for (let p = 0; p < info.width * info.height; p++) {
     const v = data[p * info.channels];
-    const i = dark ? Math.round(140 * (v / 255) ** 1.6) : v;
+    const shade = floorShade(theme, Math.floor(p / info.width), info.height);
+    const i = Math.round((dark ? 140 * (v / 255) ** 1.6 : v) * shade);
     out.set(table.subarray(i * 3, i * 3 + 3), p * 3);
   }
   await sharp(out, { raw: { width: info.width, height: info.height, channels: 3 } }).webp({ quality: 74 }).toFile(output);

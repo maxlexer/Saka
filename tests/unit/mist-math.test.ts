@@ -21,8 +21,14 @@ describe("toCanvasRect", () => {
 });
 
 describe("floorFrame", () => {
-  it("fills the width of a wide hero and crops the bottom", () => {
-    expect(floorFrame(2400, 1000)).toEqual([0, -600, 2400, 1600]);
+  it("fills the width of a wide hero, lifting it so the horizon sits at 75 percent of the hero", () => {
+    const [, bottom, , h] = floorFrame(2400, 1000);
+    expect(h).toBe(1600);
+    // The horizon, measured down from the hero top.
+    expect(1000 - (bottom + h * (1 - 0.5656))).toBeCloseTo(750);
+  });
+  it("pins a moderately wide hero to the top while its horizon is still above 75 percent", () => {
+    expect(floorFrame(2400, 1500)).toEqual([0, -100, 2400, 1600]);
   });
   it("fills the height of a tall hero, centered, with nothing cropped vertically", () => {
     expect(floorFrame(400, 800)).toEqual([-400, 0, 1200, 800]);

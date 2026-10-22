@@ -92,7 +92,7 @@ test.describe("mist", () => {
 
   test("without WebGL the theme's static image appears and no error text shows", async ({ page }) => {
     await page.addInitScript(() => {
-      localStorage.setItem("saka.theme", "dark");
+      sessionStorage.setItem("saka.theme", "dark");
       const original = HTMLCanvasElement.prototype.getContext;
       HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
         return type === "webgl2" || type === "webgl" ? null : (original as (...a: unknown[]) => unknown).call(this, type, ...args);

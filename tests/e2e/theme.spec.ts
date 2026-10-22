@@ -9,7 +9,7 @@ test("starts light even when the device prefers dark", async ({ browser }) => {
   await context.close();
 });
 
-test("the header switch toggles dark, reports its state and is remembered", async ({ page }) => {
+test("the header switch toggles dark, reports its state and is kept for the tab", async ({ page }) => {
   await page.goto("/products");
   const toggle = page.getByRole("button", { name: "Dark mode" });
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
@@ -24,8 +24,18 @@ test("the header switch toggles dark, reports its state and is remembered", asyn
   await expect(page.locator("html")).not.toHaveAttribute("data-theme", "dark");
 });
 
-test("a saved dark choice applies before any script bundle runs, so there is no light flash", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
+test("a new tab always starts light, even after dark was chosen", async ({ context }) => {
+  const first = await context.newPage();
+  await first.goto("/products");
+  await first.getByRole("button", { name: "Dark mode" }).click();
+  await expect(first.locator("html")).toHaveAttribute("data-theme", "dark");
+  const second = await context.newPage();
+  await second.goto("/products");
+  await expect(second.locator("html")).not.toHaveAttribute("data-theme", "dark");
+});
+
+test("a dark choice applies on reload before any script bundle runs, so there is no light flash", async ({ page }) => {
+  await page.addInitScript(() => sessionStorage.setItem("saka.theme", "dark"));
   await page.route("**/_next/static/**/*.js", (route) => route.abort());
   await page.goto("/products");
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");

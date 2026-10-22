@@ -155,7 +155,7 @@ test("a query skips the intro, and client navigation never replays it", async ({
 });
 
 test("the intro follows the theme", async ({ page }) => {
-  await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
+  await page.addInitScript(() => sessionStorage.setItem("saka.theme", "dark"));
   await page.goto("/");
   expect(await page.locator(".intro-overlay > div").first().evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(23, 26, 18)");
 });

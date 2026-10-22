@@ -6,11 +6,11 @@ import { renderMist } from "./lib/mist-harness.ts";
 type Boxes = Record<"bottle" | "text" | "keepA", Box>;
 // Both stills are painted on the whole floor picture (2400 by 1600, origin bottom left) and cropped over the hero the
 // same way, so their smoke lies on its floor line. The boxes bake the caps in, measured from the live page in that frame.
-// Wide covers desktop heroes from 1440 by 828 to 1879 by 850. Tall is a 375 by 772 phone hero, bottle between headline and button.
+// Wide covers desktop heroes from 1440 by 828 to 1920 by 850 (lifted). Tall is a 375 by 772 phone hero, bottle between headline and button.
 // scale sizes the feathers: the frame shows at about 0.7 CSS pixels per pixel on desktop and 0.5 on phones.
 const layouts: { name: string; scale: number; boxes: Boxes }[] = [
-  { name: "", scale: 1.4, boxes: { bottle: [1049, 219, 2119, 1567], text: [243, 834, 1314, 1217], keepA: [216, 666, 784, 974] } },
-  { name: "-tall", scale: 2, boxes: { bottle: [787, 224, 1613, 1256], text: [853, 1179, 1547, 1484], keepA: [820, 66, 1355, 224] } },
+  { name: "", scale: 1.4, boxes: { bottle: [1049, 261, 2119, 1599], text: [243, 804, 1314, 1143], keepA: [216, 635, 789, 858] } },
+  { name: "-tall", scale: 2, boxes: { bottle: [820, 224, 1580, 1173], text: [868, 1104, 1532, 1484], keepA: [835, 66, 1370, 224] } },
 ];
 const [width, height] = FLOOR_SIZE;
 

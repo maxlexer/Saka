@@ -9,7 +9,7 @@ const Mist = lazy(() => import("./Mist"));
 /** The smoke itself lies on the floor; the mask is a backstop, fading anything stirred up out above 75 percent of the hero height. */
 const MASK = "[mask-image:linear-gradient(to_top,black_50%,transparent_80%)]";
 // The stills are painted on the floor picture's frame and cropped the same way, so their smoke rests on its floor line.
-const STILL = "h-full w-full object-cover object-top";
+const STILL = "h-full w-full object-cover object-[50%_var(--lift)]";
 const FADE = { duration: 0.8, ease: "power1.inOut" };
 
 /**

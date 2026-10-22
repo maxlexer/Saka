@@ -15,7 +15,7 @@ for (const path of PATHS) {
 
 for (const path of PATHS) {
   test(`dark theme passes axe on ${path}`, async ({ page }) => {
-    await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
+    await page.addInitScript(() => sessionStorage.setItem("saka.theme", "dark"));
     await page.goto(path);
     await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -26,7 +26,7 @@ for (const path of PATHS) {
 test("axe finds no serious issues with finder results showing, in both themes", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   for (const dark of [false, true]) {
-    if (dark) await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
+    if (dark) await page.addInitScript(() => sessionStorage.setItem("saka.theme", "dark"));
     await page.goto("/?vibe=romantic&occasion=everyday&family=fresh");
     await expect(page.locator("#finder").getByRole("heading", { name: "Close matches" })).toBeVisible();
     const { violations } = await new AxeBuilder({ page }).include("#finder").withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();
@@ -37,7 +37,7 @@ test("axe finds no serious issues with finder results showing, in both themes", 
 test("axe finds no serious issues with the product modal open, in both themes", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" }); // no tweens, so contrast is measured on the final state
   for (const dark of [false, true]) {
-    if (dark) await page.addInitScript(() => localStorage.setItem("saka.theme", "dark"));
+    if (dark) await page.addInitScript(() => sessionStorage.setItem("saka.theme", "dark"));
     await page.goto(`/products?scent=${SOLD_OUT.slug}`);
     await expect(page.getByRole("dialog", { name: SOLD_OUT.name })).toBeVisible();
     const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze();

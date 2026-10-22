@@ -1,8 +1,6 @@
 import Link from "next/link";
 import type { CartCatalog } from "@/lib/catalog";
-import { STORE } from "@/lib/store";
 import { CartMenu } from "./CartMenu";
-import { PinIcon } from "./Icons";
 import { Logo } from "./Logo";
 import { MobileMenu } from "./MobileMenu";
 import { NAV } from "./nav";
@@ -23,11 +21,6 @@ export function Header({ catalog }: { catalog: CartCatalog }) {
           ))}
         </nav>
         <div className="flex items-center">
-          {/* The name starts with the visible city, so voice users can say what they see. Phones show the pin alone. */}
-          <a href={STORE.mapUrl} target="_blank" rel="noopener noreferrer" aria-label={`${STORE.city}, open in Google Maps`} className="flex h-11 min-w-11 items-center justify-center gap-2 lg:mr-3">
-            <PinIcon />
-            <span className="link label hidden lg:inline">{STORE.city}</span>
-          </a>
           <ThemeToggle />
           <CartMenu catalog={catalog} />
           <MobileMenu />

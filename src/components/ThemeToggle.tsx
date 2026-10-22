@@ -17,7 +17,7 @@ function setDark(dark: boolean) {
   if (dark) root.dataset.theme = "dark";
   else delete root.dataset.theme;
   try {
-    localStorage.setItem(THEME_KEY, dark ? "dark" : "light");
+    sessionStorage.setItem(THEME_KEY, dark ? "dark" : "light");
   } catch {
     // Storage can be blocked. The choice then lasts until the next page load.
   }

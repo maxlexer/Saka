@@ -9,8 +9,7 @@ export default async function CheckoutPage() {
   return (
     <section aria-labelledby="checkout-title" className="section">
       <div className="wrap">
-        <p className="eyebrow text-center">Checkout</p>
-        <h1 id="checkout-title" className="h2 mt-3 text-center">Your details</h1>
+        <h1 id="checkout-title" className="h2 text-center">Checkout</h1>
         <CheckoutForm catalog={toCartCatalog(catalog)} />
       </div>
     </section>

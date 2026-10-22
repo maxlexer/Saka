@@ -99,3 +99,11 @@ export function useActiveOrder() {
     () => null,
   );
 }
+
+const OPEN_CART = "saka:open-cart";
+/** Opens the header cart drawer from anywhere, such as the "View cart" link in the product modal. */
+export const openCart = () => window.dispatchEvent(new Event(OPEN_CART));
+export function onOpenCart(listener: () => void) {
+  window.addEventListener(OPEN_CART, listener);
+  return () => window.removeEventListener(OPEN_CART, listener);
+}

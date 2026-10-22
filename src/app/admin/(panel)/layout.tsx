@@ -4,7 +4,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 export const metadata = { title: "Admin", robots: { index: false, follow: false } };
 
-const tab = "link tap font-display text-[13px] font-medium uppercase tracking-[0.16em]";
+const tab = "link tap label";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin(); // Guards the shell only. Every page and action checks again.

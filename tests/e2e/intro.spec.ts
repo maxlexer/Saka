@@ -54,6 +54,8 @@ test("the overlay bottle matches the hero bottle's size, and the hand-off causes
 
 test("Skip, Escape and Enter each jump to the end state", async ({ page }) => {
   for (const act of [(p: Page) => p.getByRole("button", { name: "Skip" }).click(), (p: Page) => p.keyboard.press("Escape"), (p: Page) => p.keyboard.press("Enter")]) {
+    // The intro plays once per tab, so forget it was seen. The first round runs on about:blank, which has no storage.
+    await page.evaluate(() => sessionStorage.clear()).catch(() => {});
     await page.goto("/");
     await expect(page.getByRole("button", { name: "Skip" })).toBeVisible();
     await act(page);
@@ -61,6 +63,18 @@ test("Skip, Escape and Enter each jump to the end state", async ({ page }) => {
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator(".intro-overlay")).toBeHidden();
   }
+});
+
+test("plays once per tab: a reload skips it, a new tab plays it again", async ({ page, context }) => {
+  await page.goto("/");
+  await expect(page.locator("html")).toHaveClass(/intro-pending/);
+  await ended(page);
+  await page.reload();
+  await expect(page.locator("html")).not.toHaveClass(/intro-pending/);
+  await expect(heroButton(page)).toBeVisible();
+  const tab = await context.newPage();
+  await tab.goto("/");
+  await expect(tab.locator("html")).toHaveClass(/intro-pending/);
 });
 
 test("a slow sprite never delays the intro", async ({ page }) => {

@@ -10,11 +10,13 @@ test("home shows the hero and the right number of preview cards, with no sizes o
   expect(await page.locator("main").innerText()).not.toMatch(/\$|\d\s?ml|out of stock/i);
 });
 
-test("products are grouped under the four families, cards show only the name", async ({ page }) => {
+test("products are grouped under the four families, cards show the name and two moods", async ({ page }) => {
   await page.goto("/products");
   await expect(page.getByRole("heading", { level: 2 })).toHaveText(["Fresh", "Woody", "Oriental", "Aromatic"]);
   await expect(page.locator('main a[href*="scent="]')).toHaveCount(20);
-  await expect(page.locator('main a[href*="scent="]').first()).toHaveText(FIRST.name);
+  const first = page.locator('main a[href*="scent="]').first();
+  await expect(first).toContainText(FIRST.name);
+  await expect(first).toContainText("Bright, Calm");
   expect(await page.locator("main").innerText()).not.toMatch(/\$|\d\s?ml|out of stock/i);
 });
 

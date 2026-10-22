@@ -149,7 +149,7 @@ describe("getOrderView", () => {
     vi.mocked(db.getOrderByMd5).mockResolvedValue(pendingRow());
     vi.mocked(checkPaid).mockResolvedValue({ paid: false });
     const view = await getOrderView("id");
-    expect(view).toMatchObject({ state: "pending", qr: "QR", totalUsd: 24 });
+    expect(view).toMatchObject({ state: "pending", qr: "QR", totalUsd: 24, items: [{ name: "Jasmine Rain", sizeMl: 10, qty: 2, priceUsd: 12 }] });
     expect(db.touchChecked).toHaveBeenCalled();
     expect(checkPaid).toHaveBeenCalledTimes(1);
   });

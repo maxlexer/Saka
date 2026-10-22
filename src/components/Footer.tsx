@@ -1,16 +1,16 @@
-import { STORE } from "@/lib/store";
+import { PHONE_HREF, STORE } from "@/lib/store";
 import { socialIcon } from "./Icons";
 import { Logo } from "./Logo";
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-surface">
+    <footer className="linen border-t border-border">
       <div className="wrap flex flex-col items-center gap-6 py-14 text-center">
         <Logo className="h-14 w-auto" />
         <p className="small text-muted">Fragrance from Cambodia.</p>
         <p className="small max-w-[62ch] text-muted">
           {STORE.address}
-          {STORE.phone && <> &middot; <a className="link" href={`tel:${STORE.phone.replace(/\s/g, "")}`}>{STORE.phone}</a></>}
+          {STORE.phone && <> &middot; <a className="link" href={PHONE_HREF}>{STORE.phone}</a></>}
         </p>
         {STORE.socialLinks.length > 0 && (
           <ul className="flex gap-2">

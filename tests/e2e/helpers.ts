@@ -47,7 +47,7 @@ export async function addFirstProduct(page: Page) {
   await page.goto(`/products?scent=${FIRST.slug}`);
   const dialog = page.getByRole("dialog", { name: FIRST.name });
   await dialog.getByRole("button", { name: /^Add to cart/ }).click();
-  await expect(dialog.getByRole("status")).toHaveText("Added to cart.");
+  await expect(dialog.getByRole("status")).toHaveText("Added. View cart");
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
 }
@@ -65,7 +65,7 @@ export async function reachPayment(page: Page, fulfilment: "pickup" | "delivery"
   await addFirstProduct(page);
   await page.goto("/checkout");
   await fillDetails(page, fulfilment);
-  await page.getByRole("button", { name: "Pay with KHQR" }).click();
+  await page.getByRole("button", { name: /^Pay \$[\d.]+ with KHQR$/ }).click();
   await expect(page.getByRole("img", { name: /KHQR code/ })).toBeVisible();
 }
 

@@ -8,7 +8,7 @@ test.beforeEach(resetAll);
 
 test("pickup: pay, see the order number, admin gets one message, customer confirms on Telegram", async ({ page, request }) => {
   await reachPayment(page, "pickup");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("$12.00");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pay $12.00");
   await payAndTrigger(page);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-\d+/);
 
@@ -18,10 +18,10 @@ test("pickup: pay, see the order number, admin gets one message, customer confir
   expect(admin[0].text).toContain(`${FIRST.name}, 10ml x1  $12.00`);
   expect(admin[0].text).not.toContain("Map:");
 
-  await expect(page.getByRole("dialog", { name: "Telegram confirmation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pick up in the shop" })).toBeVisible();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   const href = (await page.getByRole("link", { name: "Open Telegram" }).getAttribute("href")) ?? "";
   expect(href).toMatch(/^https:\/\/t\.me\/saka_test_bot\?start=[\w-]{24}$/);
-  await page.getByRole("button", { name: "No thanks" }).click();
 
   await page.goto("/checkout");
   await expect(page.getByText("Your cart is empty.")).toBeVisible();
@@ -39,15 +39,16 @@ test("delivery: needs a Google Maps link, adds $2.00 and sends the map to admin"
   await addFirstProduct(page);
   await page.goto("/checkout");
   await fillDetails(page, "delivery", "https://example.com/not-maps");
-  await page.getByRole("button", { name: "Pay with KHQR" }).click();
+  await page.getByRole("button", { name: /^Pay \$[\d.]+ with KHQR$/ }).click();
   await expect(page.getByText("Paste a Google Maps link.")).toBeVisible();
   await expect(page.getByText("$14.00").first()).toBeVisible();
 
   await page.getByLabel("Google Maps link").fill("https://maps.app.goo.gl/abc123");
-  await page.getByRole("button", { name: "Pay with KHQR" }).click();
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("$14.00");
+  await page.getByRole("button", { name: /^Pay \$[\d.]+ with KHQR$/ }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pay $14.00");
   await payAndTrigger(page);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-/);
+  await expect(page.getByText("We deliver in Phnom Penh within one day.", { exact: false })).toBeVisible();
   const [admin] = (await mock.messages()).filter((m) => m.chat_id === "-1001");
   expect(admin.text).toContain("Map: https://maps.app.goo.gl/abc123");
   expect(admin.text).toContain("Delivery  $2.00");
@@ -72,7 +73,7 @@ test("resume: leaving and returning, or reloading, restores the payment screen a
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-/);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-/);
-  await expect(page.getByRole("dialog", { name: "Telegram confirmation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confirmation on Telegram" })).toBeVisible();
 });
 
 test("polling alone settles an order when the webhook never arrives", async ({ page }) => {
@@ -105,7 +106,7 @@ test("checkout re-checks live stock and names the item", async ({ page }) => {
   await setAvailable(FIRST.slug, false);
   await page.goto("/checkout");
   await fillDetails(page, "pickup");
-  await page.getByRole("button", { name: "Pay with KHQR" }).click();
+  await page.getByRole("button", { name: /^Pay \$[\d.]+ with KHQR$/ }).click();
   await expect(page.getByRole("main").getByRole("alert")).toContainText(`${FIRST.name} is out of stock`);
 });
 
@@ -113,10 +114,12 @@ test("the status route hides personal data and unknown orders are not found", as
   await reachPayment(page, "pickup");
   const id = page.url().split("/").pop();
   const body = await (await request.get(`/api/orders/${id}`)).text();
-  expect(body).not.toMatch(/Sokha|345 678|Profondo/);
+  expect(body).not.toMatch(/Sokha|345 678/);
   expect((await request.get("/api/orders/00000000-0000-4000-8000-000000000000")).status()).toBe(404);
   await page.goto("/checkout/00000000-0000-4000-8000-000000000000");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("We could not find this order.");
+  await expect(page.getByText("Reference 00000000-0000-4000-8000-000000000000")).toBeVisible();
+  await expect(page.getByRole("link", { name: "Message us on Telegram" })).toHaveAttribute("href", /^https:\/\/t\.me\/\+855/);
 });
 
 test("the Telegram route and the cron route reject missing secrets", async ({ request }) => {
@@ -129,11 +132,11 @@ test("the Telegram route and the cron route reject missing secrets", async ({ re
 const seriousIssues = async (page: Page) =>
   (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag22aa"]).analyze()).violations.filter((v) => v.impact === "serious" || v.impact === "critical");
 
-test("axe finds no serious issues on the payment screen or with the Telegram popup open", async ({ page }) => {
+test("axe finds no serious issues on the payment screen or the paid confirmation", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await reachPayment(page, "pickup");
   expect(await seriousIssues(page)).toEqual([]);
   await payAndTrigger(page);
-  await expect(page.getByRole("dialog", { name: "Telegram confirmation" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Confirmation on Telegram" })).toBeVisible();
   expect(await seriousIssues(page)).toEqual([]);
 });

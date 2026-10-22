@@ -19,8 +19,11 @@ export class OrderError extends Error {
   }
 }
 
+export type OrderLine = Pick<OrderItem, "name" | "sizeMl" | "qty" | "priceUsd">;
+
+/** Only the pending view lists items, for the payer checking what the code is for. A paid link may be shared, so it does not. */
 export type OrderView =
-  | { state: "pending"; qr: string; deeplink: string | null; totalUsd: number; expiresAt: string }
+  | { state: "pending"; qr: string; deeplink: string | null; totalUsd: number; expiresAt: string; fulfilment: "pickup" | "delivery"; items: OrderLine[] }
   | { state: "expired"; totalUsd: number }
   | { state: "paid"; orderNumber: string; totalUsd: number; fulfilment: "pickup" | "delivery"; claimToken: string };
 
@@ -113,7 +116,8 @@ export async function getOrderView(id: string): Promise<OrderView | null> {
     return { state: "paid", orderNumber: orderNumber(order.order_number), totalUsd, fulfilment: order.fulfilment, claimToken: order.claim_token };
   }
   if (Date.parse(order.expires_at) <= Date.now()) return { state: "expired", totalUsd };
-  return { state: "pending", qr: order.khqr_qr, deeplink: order.khqr_deeplink, totalUsd, expiresAt: order.expires_at };
+  const items = order.items.map(({ name, sizeMl, qty, priceUsd }) => ({ name, sizeMl, qty, priceUsd }));
+  return { state: "pending", qr: order.khqr_qr, deeplink: order.khqr_deeplink, totalUsd, expiresAt: order.expires_at, fulfilment: order.fulfilment, items };
 }
 
 /** Replies once to the chat that pressed Start. The chat id is never stored. */

@@ -15,7 +15,7 @@ export function Header({ catalog }: { catalog: CartCatalog }) {
         </Link>
         <nav aria-label="Main" className="hidden items-center gap-10 lg:flex">
           {NAV.map((item) => (
-            <Link key={item.href} href={item.href} className="link tap font-display text-[13px] font-medium uppercase tracking-[0.16em]">
+            <Link key={item.href} href={item.href} className="link tap label">
               {item.label}
             </Link>
           ))}

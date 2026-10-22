@@ -16,7 +16,7 @@ describe("parseCatalog", () => {
       id: "cool-water", name: "Davidoff Cool Water", family: "fresh", description: "Crisp.",
       notesTop: ["Seawater"], notesHeart: ["Jasmine"], notesBase: ["Musk"],
       mood: "Crisp, clean, and effortless", occasion: "Everyday",
-      vibes: ["fresh"], occasions: ["everyday"], available: true, sort: 30,
+      vibes: ["fresh"], occasions: ["everyday"], available: true, sort: 30, moods: "Bright",
     });
   });
   it("reads numeric prices, including the string form Postgres can return", () => {

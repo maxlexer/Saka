@@ -42,7 +42,7 @@ test("out of stock shows one pill and a disabled button, and nothing else", asyn
   const pill = dialog.getByText("Out of stock", { exact: true });
   await expect(pill).toHaveCount(1);
   expect(await pill.evaluate((el) => getComputedStyle(el).borderTopLeftRadius)).not.toBe("0px");
-  const button = dialog.getByRole("button", { name: /^Add to cart/ });
+  const button = dialog.getByRole("button", { name: "Add to cart", exact: true });
   await expect(button).toBeDisabled();
   await expect(button).toHaveAttribute("aria-describedby", (await pill.getAttribute("id")) ?? "missing");
   await expect(dialog.locator("svg")).toHaveCount(3); // close, fewer, more: no warning icon
@@ -56,10 +56,11 @@ test("sizes, quantity and price live in the modal and add to the cart", async ({
   await dialog.getByRole("button", { name: "More" }).click();
   await expect(dialog.getByRole("button", { name: "Add to cart, $44.00" })).toBeEnabled();
   await dialog.getByRole("button", { name: "Add to cart, $44.00" }).click();
-  await expect(dialog.getByRole("status")).toHaveText("Added to cart.");
-  await page.keyboard.press("Escape");
-  await expect(page.getByRole("button", { name: /Open cart, 2 items/ })).toBeVisible();
-  await page.getByRole("button", { name: /Open cart/ }).click();
+  await expect(dialog.getByRole("status")).toHaveText("Added. View cart");
+  await expect(page.getByRole("button", { name: /Open cart, 2 items/ })).toBeAttached();
+  await dialog.getByRole("button", { name: "View cart" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page).toHaveURL(/\/products$/);
   await expect(page.getByRole("dialog", { name: "Cart" })).toContainText(`${FIRST.name}, 20ml`);
 });
 

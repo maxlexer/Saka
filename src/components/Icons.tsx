@@ -18,7 +18,6 @@ export const MenuIcon = make("M3 7h18M3 12h18M3 17h18");
 export const CloseIcon = make("M5 5l14 14M19 5L5 19");
 export const PlusIcon = make("M12 5v14M5 12h14");
 export const MinusIcon = make("M5 12h14");
-export const CheckIcon = make("M5 12.5l4.5 4.5L19 7.5");
 export const SunIcon = make("M12 8a4 4 0 100 8 4 4 0 000-8zM12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4");
 export const MoonIcon = make("M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z");
 export const ArrowIcon = make("M4 12h16M14 6l6 6-6 6");

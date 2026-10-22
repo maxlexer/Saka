@@ -17,7 +17,7 @@ for (const path of ["/", "/products"]) {
       .flatMap((tag) => tag.match(/\bsrc="([^"]+)"/)?.[1] ?? []);
     const sizes = await Promise.all(srcs.map(async (src) => gzipSync(await (await request.get(src)).body()).length));
     const total = sizes.reduce((sum, n) => sum + n, 0);
-    console.log(`${path}: ${(total / 1024).toFixed(1)}KB gzipped across ${sizes.length} scripts`);
+    console.log(`${path}: ${(total / 1024).toFixed(1)}KB gzipped across ${sizes.length} scripts, ${BUDGET_BYTES - total} bytes to spare`);
     expect(sizes.length).toBeGreaterThan(5);
     expect(total).toBeLessThan(BUDGET_BYTES);
   });

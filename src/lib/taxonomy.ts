@@ -8,16 +8,21 @@ export type Vibe = (typeof VIBES)[number];
 export type Occasion = (typeof OCCASIONS)[number];
 export type SizeMl = (typeof SIZES_ML)[number];
 
+/** The "fresh" mood reads as Bright, so it is never confused with the Fresh family. */
+export const VIBE_LABELS: Record<Vibe, string> = {
+  calm: "Calm",
+  fresh: "Bright",
+  warm: "Warm",
+  bold: "Bold",
+  romantic: "Romantic",
+  earthy: "Earthy",
+};
+
 export const LABELS: Record<string, string> = {
   fresh: "Fresh",
   woody: "Woody",
   oriental: "Oriental",
   aromatic: "Aromatic",
-  calm: "Calm",
-  warm: "Warm",
-  bold: "Bold",
-  romantic: "Romantic",
-  earthy: "Earthy",
   everyday: "Everyday",
   work: "Work",
   evening: "Evening",

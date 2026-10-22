@@ -2,10 +2,10 @@
 
 import { useSearchParams } from "next/navigation";
 import { Fragment, useEffect, useId, useRef, useState } from "react";
-import { useCart } from "@/lib/cart";
+import { openCart, useCart } from "@/lib/cart";
 import { MAX_LINE_QTY } from "@/lib/cart-line";
 import type { Product, SizePrices } from "@/lib/catalog";
-import { gsap, MOTION } from "@/lib/gsap";
+import { gsap, MOTION, useGSAP } from "@/lib/gsap";
 import { formatUsd } from "@/lib/pricing";
 import { closeScent, SCENT_PARAM } from "@/lib/scent-url";
 import { LABELS, SIZES_ML, type SizeMl } from "@/lib/taxonomy";
@@ -104,16 +104,23 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
 
 function Details({ product, prices }: { product: Product; prices: SizePrices }) {
   const pillId = useId();
+  const sizeId = useId();
+  const note = useRef<HTMLParagraphElement>(null);
   const [sizeMl, setSizeMl] = useState<SizeMl>(10);
   const [qty, setQty] = useState(1);
-  const [status, setStatus] = useState<"added" | "full" | null>(null);
+  // A new object on every add, so a repeat add fades the note in again.
+  const [status, setStatus] = useState<{ added: boolean } | null>(null);
   const { add } = useCart();
 
-  useEffect(() => {
-    if (status !== "added") return;
-    const timer = setTimeout(() => setStatus(null), 1600);
-    return () => clearTimeout(timer);
-  }, [status]);
+  useGSAP(
+    () => {
+      if (!status) return;
+      gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", () => {
+        gsap.fromTo(note.current, { opacity: 0 }, { opacity: 1, ...MOTION.enter });
+      });
+    },
+    { dependencies: [status], revertOnUpdate: true },
+  );
 
   const rows = [
     ["Top", product.notesTop.join(", ")],
@@ -124,7 +131,7 @@ function Details({ product, prices }: { product: Product; prices: SizePrices }) 
   ].filter(([, value]) => value);
 
   return (
-    <div className="space-y-6 p-6 lg:p-10">
+    <div className="space-y-6 px-6 pt-6 lg:p-10">
       <div data-reveal>
         <p className="eyebrow">{LABELS[product.family]}</p>
         <h2 className="h2 mt-3 text-balance">{product.name}</h2>
@@ -143,9 +150,21 @@ function Details({ product, prices }: { product: Product; prices: SizePrices }) 
           </Fragment>
         ))}
       </dl>
-      <fieldset data-reveal>
-        <legend className="eyebrow mb-3">Size</legend>
-        <div className="grid grid-cols-3 gap-2">
+      {/* On phones this bar stays pinned to the bottom of the sheet, so choosing and adding never needs a scroll. */}
+      <div data-reveal className="space-y-3 border-t border-border bg-bg pt-4 max-lg:sticky max-lg:bottom-0 max-lg:-mx-6 max-lg:px-6 max-lg:pb-[max(1rem,env(safe-area-inset-bottom))] lg:space-y-4 lg:border-0 lg:pt-0">
+        <div className="flex min-h-[18px] items-baseline justify-between gap-4">
+          <span id={sizeId} className="eyebrow">Size</span>
+          <p ref={note} role="status" className="small text-right">
+            {status?.added && (
+              <>
+                Added.{" "}
+                <button type="button" onClick={() => { closeScent(); openCart(); }} className="link tap font-medium">View cart</button>
+              </>
+            )}
+            {status && !status.added && <span className="text-error">Your cart is full. Remove an item to add more.</span>}
+          </p>
+        </div>
+        <div role="radiogroup" aria-labelledby={sizeId} className="grid grid-cols-3 gap-2">
           {SIZES_ML.map((size) => (
             <label key={size} className="block">
               <input type="radio" name="size" value={size} checked={sizeMl === size} onChange={() => setSizeMl(size)} aria-label={`${size}ml, ${formatUsd(prices[size])}`} className="peer sr-only" />
@@ -156,29 +175,22 @@ function Details({ product, prices }: { product: Product; prices: SizePrices }) 
             </label>
           ))}
         </div>
-      </fieldset>
-      <div data-reveal className="flex items-center justify-between">
-        <span className="eyebrow">Quantity</span>
-        <div className="flex items-center">
-          <button type="button" aria-label="Fewer" onClick={() => setQty(Math.max(1, qty - 1))} className="flex size-11 items-center justify-center text-secondary"><MinusIcon /></button>
-          <span aria-live="polite" className="w-6 text-center">{qty}</span>
-          <button type="button" aria-label="More" onClick={() => setQty(Math.min(MAX_LINE_QTY, qty + 1))} className="flex size-11 items-center justify-center text-secondary"><PlusIcon /></button>
+        <div className="flex gap-3">
+          <div role="group" aria-label="Quantity" className="flex flex-none items-center rounded-sm border border-border">
+            <button type="button" aria-label="Fewer" onClick={() => setQty(Math.max(1, qty - 1))} className="flex size-11 items-center justify-center text-secondary"><MinusIcon /></button>
+            <span aria-live="polite" className="w-5 text-center">{qty}</span>
+            <button type="button" aria-label="More" onClick={() => setQty(Math.min(MAX_LINE_QTY, qty + 1))} className="flex size-11 items-center justify-center text-secondary"><PlusIcon /></button>
+          </div>
+          <button
+            type="button"
+            disabled={!product.available}
+            aria-describedby={product.available ? undefined : pillId}
+            onClick={() => setStatus({ added: add({ productId: product.id, sizeMl, qty }) })}
+            className="btn btn-primary min-w-0 flex-1 px-4"
+          >
+            {product.available ? `Add to cart, ${formatUsd(prices[sizeMl] * qty)}` : "Add to cart"}
+          </button>
         </div>
-      </div>
-      <div data-reveal>
-        <button
-          type="button"
-          disabled={!product.available}
-          aria-describedby={product.available ? undefined : pillId}
-          onClick={() => setStatus(add({ productId: product.id, sizeMl, qty }) ? "added" : "full")}
-          className="btn btn-primary w-full"
-        >
-          {status === "added" ? "Added to cart" : `Add to cart, ${formatUsd(prices[sizeMl] * qty)}`}
-        </button>
-        <p role="status" className={status === "full" ? "small mt-2 text-error" : "sr-only"}>
-          {status === "added" && "Added to cart."}
-          {status === "full" && "Your cart is full. Remove an item to add more."}
-        </p>
       </div>
     </div>
   );

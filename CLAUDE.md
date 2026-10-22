@@ -34,10 +34,10 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 
 - English only. No Khmer, no language toggle, no Noto Sans Khmer, no hreflang, no `_kh` fields, no i18n layer. The brand brief's "Khmer and English side by side" line does not apply.
 - There IS a cart and a checkout page. The original "no cart, no checkout" assumption is dropped. See "Checkout flow" below.
-- Routes: `/` home, `/products` full catalog, `/checkout`, an order status route keyed by order id (used for mobile resume and the Telegram popup), `/admin` (login, products and prices, transactions), and a branded `/404`. There are no per-product pages: each perfume opens in a modal addressed by `?scent=<slug>` on the current page, so it can be shared and Back closes it.
+- Routes: `/` home, `/products` full catalog, `/checkout`, an order status route keyed by order id (used for mobile resume and the paid confirmation), `/admin` (login, products and prices, transactions), and a branded `/404`. There are no per-product pages: each perfume opens in a modal addressed by `?scent=<slug>` on the current page, so it can be shared and Back closes it.
 - Home shows 6 preview cards (3 visible on desktop, 6 on mobile) with a "view products" arrow linking to `/products`. `/products` groups all perfumes under the four families (Fresh, Woody, Oriental, Aromatic).
 - The scent finder lives on the home page only, not on `/products`. Its results open the product modal.
-- Product cards show only the floating bottle and the full perfume name. No sizes, prices, stock or Riel on cards or anywhere on home. Sizes, prices and stock appear only inside the product modal, where the visitor adds to cart.
+- Product cards show only the floating bottle, the full perfume name and a mood line of its first two vibes (for example "Bright, Calm", added 2026-10-22 by the owner so shelves can be told apart). No sizes, prices, stock or Riel on cards or anywhere on home. Sizes, prices and stock appear only inside the product modal, where the visitor adds to cart.
 - Catalog: Sanity is removed. Perfumes and prices live in Supabase and are edited only in the one-password `/admin` page. Staff can rename a perfume, toggle Available or Out of Stock, change the three size prices and view paid transactions. Staff cannot add or delete perfumes. The 20 perfumes are seeded from `supabase/seed/catalog.json`.
 - Stock is tracked per perfume, not per bottle size, and has no count: one boolean that staff toggle in admin. Checkout re-checks it against live data. Out of Stock is shown as one "Out of stock" pill in the modal and a disabled Add to cart button. No icon, no red, no second warning.
 - Prices: one USD price per size (10ml, 20ml, 50ml), shared by every perfume. USD only, everywhere: no Riel, no KHR, no exchange rate in code or copy.
@@ -47,7 +47,7 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 - The logo is delivered as a hand-built SVG, created for the user. Source files: `Saka logo.jpg` and `SakaBG logo.png` in the project root, both raster on pure white and for reference only. Use the SVG everywhere. Never place the raster files on the site.
 - Bottle spin: every bottle (the hero and each perfume) has a transparent `still.webp` and a 36-frame `spin.webp` sprite, made by `scripts/frames.mjs`. The user will supply videos later. Until then use clearly marked placeholders. Cards float and spin once on desktop hover. The modal bottle floats and turns every few seconds.
 - Hero: a floor scene (AI-generated light and dark backdrops, approved by the user) with the bottle standing on the floor, the headline and one VIEW PRODUCTS button on the left. Far less text than the reference.
-- Intro sequence: 0 to 1s logo fades in then out. 1 to 3s the bottle fades in at center and spins. 3 to 4.2s it glides down onto the floor while the floor scene dissolves in, then the headline, button and header fade up and the mist breathes in. Skippable, respects reduced motion.
+- Intro sequence: 0 to 1s logo fades in then out. 1 to 3s the bottle fades in at center and spins. 3 to 4.2s it glides down onto the floor while the floor scene dissolves in, then the headline, button and header fade up and the mist breathes in. Skippable, respects reduced motion. Plays once per browser tab (`sessionStorage`), so reloads and returns skip it.
 
 ## Checkout flow (locked)
 
@@ -58,9 +58,10 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 - Orders live in Supabase (Hobby plan), accessed only from the server with the service role key. No chat ids are stored and there is no customer table. The admin Telegram group is the human-readable record of paid orders.
 - When payment is confirmed, the bot posts one message to the admin group with everything the customer entered (name, Telegram number, fulfilment, items and sizes, total) and, for delivery, the Google Maps link. This does not depend on the customer doing anything else.
 - Supabase Hobby pauses projects after a week of inactivity. A daily Vercel cron keeps it awake and cleans old rows.
-- Every time an order is paid, show the customer a popup with a button that opens the SAKA checkout Telegram bot through a deep link with a payload (`t.me/<bot>?start=<payload>`). It is optional. It is only for customers who want a confirmation.
+- Payment and paid states share one "counter receipt" card on the linen texture: wordmark, then the QR (or the drawn check once paid), then the printed lines.
+- Every time an order is paid, the paid page shows the order number, next steps (pickup hours and address, or delivery within one day in Phnom Penh) and an inline Telegram card with a button that opens the SAKA checkout Telegram bot through a deep link with a payload (`t.me/<bot>?start=<payload>`). It is optional. It is only for customers who want a confirmation. No popup: it covered the order number (changed 2026-10-21 by the owner, after the impeccable critique).
 - The confirmation and the order number go to the customer only after the bot receives that start event. The bot reads the chat id from that event and uses it once. Nothing is looked up by phone number or name.
-- The popup state survives a reload or return, because the order id is in the URL.
+- The paid page survives a reload or return, because the order id is in the URL.
 
 ## khqr.dev facts (verified against api.khqr.dev, do not assume more)
 
@@ -73,7 +74,6 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 - Return URLs must be on a domain verified in the developer portal (DNS TXT or file).
 - Always confirm a webhook with a server-side `check_transaction_by_md5` call and compare the amount against the total recomputed from the live Supabase size prices plus the delivery fee.
 - The cart and checkout show perfume name and size as text only (for example "Name, 20ml"). No size images.
-- A popup here is allowed because it is user-triggered by completing payment. It is not a first-load popup. Use the single permitted soft shadow for it.
 
 ## Pending decisions (do not assume, ask or check the spec)
 

@@ -37,16 +37,21 @@ type Props = {
   alt: string;
   priority?: boolean;
   float?: boolean;
+  /** A pulsing placeholder until the still arrives. Off for the hero, which has its floor scene behind it. */
+  skeleton?: boolean;
   className?: string;
   ref?: Ref<SpinHandle>;
 };
 
-export function SpinBottle({ dir, alt, priority = false, float = false, className = "", ref }: Props) {
+export function SpinBottle({ dir, alt, priority = false, float = false, skeleton = true, className = "", ref }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const still = useRef<HTMLImageElement>(null);
   const sprite = useRef<HTMLDivElement>(null);
   const shadow = useRef<HTMLDivElement>(null);
+  const placeholder = useRef<HTMLDivElement>(null);
+  // The still paints over the placeholder in the same frame, so it can simply go.
+  const settle = () => placeholder.current?.setAttribute("hidden", "");
   const turning = useRef(false);
   const src = `${dir}/spin.webp`;
   const stillSrc = `${dir}/still.webp`;
@@ -54,6 +59,8 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
 
   const { contextSafe } = useGSAP(
     () => {
+      // Loaded before hydration, so onLoad already fired unseen. Not `complete`: Chromium sets it on lazy images still waiting.
+      if (still.current?.naturalWidth) settle();
       if (!float) return;
       const mm = gsap.matchMedia();
       mm.add("(prefers-reduced-motion: no-preference)", () => {
@@ -113,8 +120,10 @@ export function SpinBottle({ dir, alt, priority = false, float = false, classNam
       <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
         <div ref={body} className="relative aspect-[4/5] h-full">
           {/* A plain img served as written by scripts/frames.ts: a card, the modal and the hero share one cached file, a glide never waits on a new size, and no image component ships to the browser. */}
+          {skeleton && <div ref={placeholder} aria-hidden="true" className="skeleton absolute inset-x-[30%] inset-y-[6%] rounded-card bg-border/60" />}
           <img
             ref={still}
+            onLoad={skeleton ? settle : undefined}
             src={stillSrc}
             alt={alt}
             loading={priority ? "eager" : "lazy"}

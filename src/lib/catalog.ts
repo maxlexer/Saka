@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { listPrices, listProducts } from "./supabase";
-import { OCCASIONS, SCENT_FAMILIES, SIZES_ML, VIBES, type SizeMl } from "./taxonomy";
+import { OCCASIONS, SCENT_FAMILIES, SIZES_ML, VIBE_LABELS, VIBES, type SizeMl } from "./taxonomy";
 
 const tags = <T extends string>(allowed: readonly T[]) =>
   z.array(z.string()).transform((list) => list.filter((value): value is T => (allowed as readonly string[]).includes(value)));
@@ -27,6 +27,8 @@ const productRow = z
     notesTop: notes_top,
     notesHeart: notes_heart,
     notesBase: notes_base,
+    /** The card's mood line, for example "Bright, Calm". Built here so the card ships no lookup code. */
+    moods: rest.vibes.slice(0, 2).map((vibe) => VIBE_LABELS[vibe]).join(", "),
   }));
 
 const priceRow = z.object({ size_ml: z.union([z.literal(10), z.literal(20), z.literal(50)]), price_usd: z.coerce.number().positive() });

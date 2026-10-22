@@ -10,6 +10,7 @@ import { computeTotals, DELIVERY_FEE_USD, formatUsd } from "@/lib/pricing";
 import { detailsSchema } from "@/lib/schemas";
 import { STORE } from "@/lib/store";
 import { AlertIcon } from "./Icons";
+import { ShopContact } from "./ShopContact";
 import { CheckoutSkeleton } from "./Skeletons";
 
 type Props = { catalog: CartCatalog };
@@ -90,7 +91,7 @@ export function CheckoutForm({ catalog }: Props) {
   }
 
   const resume = activeOrder && (
-    <Link href={`/checkout/${activeOrder}`} className="mb-8 flex min-h-11 items-center justify-between border border-border bg-surface px-4 py-3">
+    <Link href={`/checkout/${activeOrder}`} className="mb-8 flex min-h-11 items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
       <span>Continue your payment</span>
       <span className="eyebrow">Open</span>
     </Link>
@@ -111,7 +112,24 @@ export function CheckoutForm({ catalog }: Props) {
     <div className="mt-10">
       {resume}
       <div className="grid gap-12 lg:grid-cols-[1fr_380px]">
-        <form onSubmit={onSubmit} noValidate className="space-y-6">
+        <aside aria-label="Order summary" className="h-fit rounded-card border border-border bg-surface p-6 lg:col-start-2 lg:row-start-1">
+          <h2 className="h3">Your order</h2>
+          <ul className="mt-6 space-y-3">
+            {rows.map(({ line, name, price }) => (
+              <li key={`${line.productId}-${line.sizeMl}`} className="flex justify-between gap-4">
+                <span>{name}, {line.sizeMl}ml x{line.qty}</span>
+                <span>{price === undefined ? "Unavailable" : formatUsd(price * line.qty)}</span>
+              </li>
+            ))}
+          </ul>
+          <dl className="mt-6 space-y-2 border-t border-border pt-4">
+            <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatUsd(totals.subtotalUsd)}</dd></div>
+            <div className="flex justify-between"><dt>{delivery ? "Delivery" : "Pickup"}</dt><dd>{delivery ? formatUsd(totals.deliveryFeeUsd) : "Free"}</dd></div>
+            <div className="flex justify-between font-medium"><dt>Total</dt><dd>{formatUsd(totals.totalUsd)}</dd></div>
+          </dl>
+        </aside>
+        <form onSubmit={onSubmit} noValidate aria-labelledby="details-title" className="space-y-6 lg:col-start-1 lg:row-start-1">
+          <h2 id="details-title" className="h3">Your details</h2>
           <Field id="name" label="Name" error={errors.name}>
             <input id="name" autoComplete="name" value={draft.name} onChange={(e) => set({ name: e.target.value })} {...described("name")} className="input" />
           </Field>
@@ -150,26 +168,11 @@ export function CheckoutForm({ catalog }: Props) {
             </p>
           )}
           <button type="submit" disabled={busy} aria-busy={busy} className="btn btn-primary w-full lg:w-auto">
-            {busy ? "Preparing your code" : "Pay with KHQR"}
+            {busy ? "Preparing your code" : `Pay ${formatUsd(totals.totalUsd)} with KHQR`}
           </button>
+          <ShopContact />
         </form>
 
-        <aside aria-label="Order summary" className="h-fit border border-border bg-surface p-6">
-          <h2 className="h3">Your order</h2>
-          <ul className="mt-6 space-y-3">
-            {rows.map(({ line, name, price }) => (
-              <li key={`${line.productId}-${line.sizeMl}`} className="flex justify-between gap-4">
-                <span>{name}, {line.sizeMl}ml x{line.qty}</span>
-                <span>{price === undefined ? "Unavailable" : formatUsd(price * line.qty)}</span>
-              </li>
-            ))}
-          </ul>
-          <dl className="mt-6 space-y-2 border-t border-border pt-4">
-            <div className="flex justify-between"><dt>Subtotal</dt><dd>{formatUsd(totals.subtotalUsd)}</dd></div>
-            <div className="flex justify-between"><dt>{delivery ? "Delivery" : "Pickup"}</dt><dd>{delivery ? formatUsd(totals.deliveryFeeUsd) : "Free"}</dd></div>
-            <div className="flex justify-between font-medium"><dt>Total</dt><dd>{formatUsd(totals.totalUsd)}</dd></div>
-          </dl>
-        </aside>
       </div>
     </div>
   );

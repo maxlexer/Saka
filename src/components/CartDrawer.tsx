@@ -29,7 +29,7 @@ export function CartDrawer({ open, onClose, catalog }: { open: boolean; onClose:
         </div>
 
         {activeOrder && (
-          <Link href={`/checkout/${activeOrder}`} onClick={onClose} className="mt-6 flex min-h-11 items-center justify-between border border-border bg-surface px-4 py-3">
+          <Link href={`/checkout/${activeOrder}`} onClick={onClose} className="mt-6 flex min-h-11 items-center justify-between rounded-card border border-border bg-surface px-4 py-3">
             <span>Continue your payment</span>
             <span className="eyebrow">Open</span>
           </Link>

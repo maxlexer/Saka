@@ -1,7 +1,7 @@
 "use client";
 
 import { lazy, Suspense, useEffect, useState } from "react";
-import { useCart } from "@/lib/cart";
+import { onOpenCart, useCart } from "@/lib/cart";
 import type { CartCatalog } from "@/lib/catalog";
 import { preloader, preloadWhenIdle } from "@/lib/preload";
 import { CartIcon } from "./Icons";
@@ -16,6 +16,7 @@ export function CartMenu({ catalog }: { catalog: CartCatalog }) {
   const [open, setOpen] = useState<boolean | null>(null);
   const count = (lines ?? []).reduce((n, l) => n + l.qty, 0);
   useEffect(() => preloadWhenIdle(load), []);
+  useEffect(() => onOpenCart(() => setOpen(true)), []);
 
   return (
     <>
@@ -34,7 +35,7 @@ export function CartMenu({ catalog }: { catalog: CartCatalog }) {
           <span className="skeleton absolute right-0 top-0 h-5 w-5" aria-hidden="true" />
         ) : (
           count > 0 && (
-            <span className="absolute right-0 top-0 grid h-5 min-w-5 place-items-center rounded-sm bg-badge px-1 font-display text-[11px] font-medium text-ink">
+            <span className="badge absolute right-0 top-0">
               {count}
             </span>
           )

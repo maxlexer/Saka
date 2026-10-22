@@ -24,7 +24,7 @@ export function Hero() {
       <img {...floor("dark")} className={`floor-dark hidden opacity-0 dark:block dark:opacity-100 ${FLOOR}`} />
 
       <div className="wrap relative z-10 flex h-full flex-col items-start justify-between pb-12 pt-14 lg:justify-center lg:gap-10 lg:py-0">
-        <h1 id="hero-title" data-intro-hide data-mist-text className="h1 max-w-[12ch] text-balance">
+        <h1 id="hero-title" data-intro-hide data-mist-text className="h1 max-w-[16ch] text-balance lg:max-w-[20ch]">
           Find the scent that feels like you.
         </h1>
         <div data-intro-hide>
@@ -37,7 +37,7 @@ export function Hero() {
       {/* Centered by layout: on desktop the box spans 32 to 100 percent, so the bottle stands at 66 percent. */}
       <div className="absolute inset-x-0 bottom-[13%] z-[1] flex h-[44%] justify-center lg:bottom-[11%] lg:left-[32%] lg:h-[58%]">
         <div data-hero-bottle className="aspect-[4/5] h-full">
-          <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority className="h-full" />
+          <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority skeleton={false} className="h-full" />
         </div>
       </div>
 

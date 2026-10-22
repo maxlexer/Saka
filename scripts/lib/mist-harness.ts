@@ -1,16 +1,14 @@
 import type { Page } from "@playwright/test";
-import { fragment, PUFFS, vertex } from "../../src/lib/mist-shader.ts";
+import { display, vertex } from "../../src/lib/mist-shader.ts";
 import { hexToRgb, MIST_COLORS, type Box } from "../../src/lib/mist-math.ts";
 
 type Boxes = Partial<Record<string, Box>>;
-/** A wind trail as Mist.tsx would upload it: four numbers per puff (position, wind) and a birth time per puff. */
-type Wind = { puffs: number[]; born: number[] };
-type Options = { width: number; height: number; time?: number; scale?: number; colors?: readonly string[]; boxes?: Boxes; wind?: Wind };
+type Options = { width: number; height: number; time?: number; scale?: number; colors?: readonly string[]; boxes?: Boxes };
 
-/** Draws one frame of the real shader in a fresh canvas and reports the maximum alpha per region. */
-export function renderMist(page: Page, { width, height, time = 40, scale = 1, colors = MIST_COLORS, boxes = {}, wind }: Options) {
+/** Paints the resting smoke with the real display shader in a fresh canvas and reports the maximum alpha per region. */
+export function renderMist(page: Page, { width, height, time = 40, scale = 1, colors = MIST_COLORS, boxes = {} }: Options) {
   return page.evaluate(
-    ({ vertex, fragment, puffs, wind, width, height, time, scale, boxes, colors }) => {
+    ({ vertex, fragment, width, height, time, scale, boxes, colors }) => {
       const canvas = document.createElement("canvas");
       canvas.width = width;
       canvas.height = height;
@@ -49,14 +47,6 @@ export function renderMist(page: Page, { width, height, time = 40, scale = 1, co
       set("uRes", width, height);
       set("uScale", scale);
       ["uColA", "uColB", "uColC"].forEach((name, i) => set(name, ...colors[i]));
-      // Without wind every puff is long gone.
-      const born = new Float32Array(puffs).fill(-1e4);
-      const puff = new Float32Array(puffs * 4);
-      born.set(wind?.born ?? []);
-      puff.set(wind?.puffs ?? []);
-      gl.uniform1fv(gl.getUniformLocation(program, "uBorn"), born);
-      gl.uniform4fv(gl.getUniformLocation(program, "uPuffs"), puff);
-      set("uRadius", 160 * scale);
       set("uKeepA", ...(boxes.keepA ?? zero));
       set("uBottle", ...(boxes.bottle ?? zero));
       set("uText", ...(boxes.text ?? zero));
@@ -80,6 +70,6 @@ export function renderMist(page: Page, { width, height, time = 40, scale = 1, co
       for (const [name, box] of Object.entries(boxes)) stats[name] = maxAlpha(box as number[]);
       return { stats, dataUrl: canvas.toDataURL("image/png") };
     },
-    { vertex, fragment, puffs: PUFFS, wind, width, height, time, scale, boxes, colors: colors.map(hexToRgb) },
+    { vertex, fragment: display(true), width, height, time, scale, boxes, colors: colors.map(hexToRgb) },
   );
 }

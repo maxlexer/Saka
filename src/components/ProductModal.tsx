@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Fragment, useEffect, useId, useRef, useState } from "react";
+import { Fragment, useId, useRef, useState } from "react";
 import { openCart, useCart } from "@/lib/cart";
 import { MAX_LINE_QTY } from "@/lib/cart-line";
 import type { Product, SizePrices } from "@/lib/catalog";
@@ -11,10 +11,7 @@ import { closeScent, SCENT_PARAM } from "@/lib/scent-url";
 import { LABELS, SIZES_ML, type SizeMl } from "@/lib/taxonomy";
 import { CloseIcon, MinusIcon, PlusIcon } from "./Icons";
 import { Modal } from "./Modal";
-import { SpinBottle, type SpinHandle } from "./SpinBottle";
-
-const TURN_S = 2.2;
-const TURN_EVERY_MS = 6000;
+import { SpinBottle } from "./SpinBottle";
 
 /** Offset and scale that place `el` exactly over `target`, for the card to stage glide. Both boxes are 4:5. */
 function flip(target: Element, el: Element) {
@@ -30,19 +27,6 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
   if (product && product !== shown) setShown(product);
   const open = product !== null;
   const stage = useRef<HTMLDivElement>(null);
-  const bottle = useRef<SpinHandle>(null);
-
-  // The bottle turns once after it lands, then every few seconds while the modal is open.
-  useEffect(() => {
-    if (!open) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const first = window.setTimeout(() => void bottle.current?.spin(TURN_S), MOTION.glide.duration * 1000);
-    const again = window.setInterval(() => void bottle.current?.spin(TURN_S), TURN_EVERY_MS);
-    return () => {
-      window.clearTimeout(first);
-      window.clearInterval(again);
-    };
-  }, [open, shown]);
 
   // Glide only from a card the visitor can see: a hidden card has an empty box, and one off screen would glide from nowhere.
   // A perfume can have two cards on home (the preview and a finder result), so the visible one wins.
@@ -92,7 +76,7 @@ export function ProductModal({ products, prices }: { products: Product[]; prices
           </button>
           <div className="bg-surface px-6 pb-4 pt-10 lg:p-10">
             <div ref={stage} className="mx-auto aspect-[4/5] h-[38svh] lg:h-auto lg:w-full">
-              <SpinBottle key={shown.id} ref={bottle} dir={`/products/${shown.id}`} alt={`${shown.name} bottle`} float className="h-full" />
+              <SpinBottle key={shown.id} dir={`/products/${shown.id}`} alt={`${shown.name} bottle`} float className="h-full" />
             </div>
           </div>
           <Details key={shown.id} product={shown} prices={prices} />

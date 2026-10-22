@@ -129,7 +129,7 @@ export function SpinBottle({ dir, alt, priority = false, float = false, skeleton
       {/* Centered by layout, not by CSS translate: GSAP folds `translate` into its own transform and can freeze a wrong value while the box is hidden. */}
       <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
         <div ref={body} className="relative aspect-[4/5] h-full">
-          {/* A plain img served as written by scripts/frames.ts: a card, the modal and the hero share one cached file, a glide never waits on a new size, and no image component ships to the browser. */}
+          {/* A plain img served as written by scripts/frames.ts: a card and the modal share one cached file, a glide never waits on a new size, and no image component ships to the browser. */}
           {skeleton && <div ref={placeholder} aria-hidden="true" className="skeleton absolute inset-x-[30%] inset-y-[6%] rounded-card bg-border/60" />}
           <img
             ref={still}
@@ -141,7 +141,8 @@ export function SpinBottle({ dir, alt, priority = false, float = false, skeleton
             decoding="async"
             className="absolute inset-0 size-full object-contain"
           />
-          <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
+          {/* Only the hero bottle turns, so only a bottle given a handle carries the sprite layer. */}
+          {ref && <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />}
         </div>
       </div>
     </div>

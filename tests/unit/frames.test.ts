@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -26,7 +27,20 @@ describe("writeBottle", () => {
     }
   }, 60_000);
 
+  it("writes only a still from a single frame, standing in the same spot", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "saka-frames-"));
+    try {
+      const [front] = await placeholderFrames();
+      await writeBottle([front], dir);
+      expect(existsSync(join(dir, "spin.webp"))).toBe(false);
+      const { info } = await sharp(join(dir, "still.webp")).trim().toBuffer({ resolveWithObject: true });
+      expect(-(info.trimOffsetTop ?? 0) + info.height).toBe(Math.round(1200 * 0.92));
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it("refuses the wrong number of frames", async () => {
-    await expect(writeBottle([], "unused")).rejects.toThrow("36 frames");
+    await expect(writeBottle([], "unused")).rejects.toThrow("1 or 36 frames");
   });
 });

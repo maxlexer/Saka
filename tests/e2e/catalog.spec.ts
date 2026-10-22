@@ -28,12 +28,16 @@ test("cards have 8px corners and a 4:5 bottle stage", async ({ page }) => {
   expect((box?.width ?? 0) / (box?.height ?? 1)).toBeCloseTo(0.8, 1);
 });
 
-test("hovering a card with a mouse loads its spin sprite", async ({ page, isMobile }) => {
+test("product bottles only float: hovering a card never loads a spin sprite", async ({ page, isMobile }) => {
   test.skip(isMobile, "Hover only exists on desktop");
+  const sprites: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("spin.webp")) sprites.push(request.url());
+  });
   await page.goto("/products");
-  const sprite = page.waitForRequest(`**/products/${FIRST.slug}/spin.webp`);
   await page.locator('main a[href*="scent="]').first().hover();
-  await sprite;
+  await page.waitForTimeout(1000);
+  expect(sprites).toEqual([]);
 });
 
 test("adding to the cart updates the count and survives a reload", async ({ page }) => {

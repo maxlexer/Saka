@@ -118,8 +118,7 @@ test("clicking the backdrop closes the modal", async ({ page }) => {
   await expect(page).toHaveURL(/\/products$/);
 });
 
-test("with reduced motion the modal never loads a spin sprite", async ({ page }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
+test("the modal bottle only floats: it never loads a spin sprite", async ({ page }) => {
   const sprites: string[] = [];
   page.on("request", (request) => {
     if (request.url().includes("spin.webp")) sprites.push(request.url());

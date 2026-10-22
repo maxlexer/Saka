@@ -39,11 +39,13 @@ type Props = {
   float?: boolean;
   /** A pulsing placeholder until the still arrives. Off for the hero, which has its floor scene behind it. */
   skeleton?: boolean;
+  /** Standing on the floor: the shadow sits tight under the base instead of below a floating bottle. */
+  grounded?: boolean;
   className?: string;
   ref?: Ref<SpinHandle>;
 };
 
-export function SpinBottle({ dir, alt, priority = false, float = false, skeleton = true, className = "", ref }: Props) {
+export function SpinBottle({ dir, alt, priority = false, float = false, skeleton = true, grounded = false, className = "", ref }: Props) {
   const root = useRef<HTMLDivElement>(null);
   const body = useRef<HTMLDivElement>(null);
   const still = useRef<HTMLImageElement>(null);
@@ -117,6 +119,13 @@ export function SpinBottle({ dir, alt, priority = false, float = false, skeleton
 
   return (
     <div ref={root} className={`relative ${className}`}>
+      {/* Painted first, so a grounded shadow tucks under the base: a dark contact line inside a soft pool. The placeholder art's base sits at 16 percent of this box. */}
+      <div
+        ref={shadow}
+        data-shadow
+        aria-hidden="true"
+        className={`absolute inset-x-0 mx-auto rounded-[50%] ${grounded ? "bottom-[15.2%] h-[2%] w-[37%] bg-[var(--ground)] shadow-[0_0_24px_10px_var(--contact)] blur-[2px]" : "bottom-[6%] h-[4%] w-[44%] bg-[var(--contact)] blur-[6px]"}`}
+      />
       {/* Centered by layout, not by CSS translate: GSAP folds `translate` into its own transform and can freeze a wrong value while the box is hidden. */}
       <div className="absolute inset-x-0 bottom-[9%] flex h-[89%] justify-center">
         <div ref={body} className="relative aspect-[4/5] h-full">
@@ -135,7 +144,6 @@ export function SpinBottle({ dir, alt, priority = false, float = false, skeleton
           <div ref={sprite} aria-hidden="true" className="absolute inset-0 bg-no-repeat opacity-0 [background-size:600%_600%]" />
         </div>
       </div>
-      <div ref={shadow} data-shadow aria-hidden="true" className="absolute inset-x-0 bottom-[6%] mx-auto h-[4%] w-[44%] rounded-[50%] bg-[var(--contact)] blur-[6px]" />
     </div>
   );
 }

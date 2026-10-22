@@ -220,7 +220,7 @@ Rules:
   - Right of center: the hero bottle (SpinBottle `dir="/hero"`) standing on the floor, about 58% of the hero height, with its contact shadow.
   - No subheadline, no feature card, no dots.
 - **Mobile layout:** headline at the top left, bottle centered on the floor, button at the bottom left.
-- **Mist:** low over the floor only. The original mist rules apply, with a CSS mask that fades it out above roughly 65% of the hero height. Colors follow the theme: light #F2EBDF, #DCD0BF, #AD9883, dark #23261C, #3A3A2C, #8C7964. The single button is the keep-out box.
+- **Mist (now smoke, owner change 2026-10-22):** low over the floor only, with a CSS mask that fades it out above roughly 75% of the hero height. Thicker and contrasting with the theme: light #AD9883, #8C7964, #685846, dark #8C7964, #BDAE9B, #DCD0BF. Caps 0.8 at the edges, 0.6 inside, 0.4 over the bottle glass, 0.15 behind text. The single button is the keep-out box. See "Smoke rules" in CLAUDE.md.
 
 ### 7.2 Intro timeline
 

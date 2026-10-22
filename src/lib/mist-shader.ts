@@ -46,21 +46,24 @@ float noise(vec2 p) {
              mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x), f.y);
 }
 
+// Each octave is turned, so the noise grid lines never stack into straight creases once the smoke is dense.
+const mat2 TURN = mat2(0.8, 0.6, -0.6, 0.8);
+
 float fbm(vec2 p) {
   float v = 0.0;
   float a = 0.5;
   for (int i = 0; i < 4; i++) {
     v += a * noise(p);
-    p = p * 2.02 + 17.0;
+    p = TURN * p * 2.02 + 17.0;
     a *= 0.5;
   }
   return v;
 }
 
-// 1 inside the box, fading to 0 over "feather" pixels outside it.
+// 1 inside the box, fading to 0 over "feather" pixels outside it, with round corners so dense smoke never shows a box.
 float rectMask(vec2 p, vec4 r, float feather) {
-  vec2 d = max(r.xy - p, p - r.zw);
-  return 1.0 - smoothstep(0.0, feather, max(d.x, d.y));
+  vec2 d = max(max(r.xy - p, p - r.zw), 0.0);
+  return 1.0 - smoothstep(0.0, feather, length(d));
 }
 
 void main() {
@@ -90,26 +93,33 @@ void main() {
   push *= min(1.0, uRadius * 0.33 / max(pushed, 1e-3));
   vec2 p = (px - push) * k;
 
-  // Smoke: a doubly warped field that curls slowly on its own, drifting sideways.
-  float t = uTime * 0.04;
+  // Smoke: a doubly warped field that curls on its own and rises slowly, like smoke off the floor.
+  float t = uTime * 0.05;
+  p.y -= t * 1.2;
   vec2 q = vec2(fbm(p + vec2(0.0, t)), fbm(p + vec2(5.2, 1.3) - vec2(t * 0.7, 0.0)));
   vec2 w = vec2(fbm(p + 2.6 * q + vec2(1.7, 9.2) + t * 0.5), fbm(p + 2.6 * q + vec2(8.3, 2.8) - t * 0.4));
   float f = fbm(p + 2.0 * w + vec2(t, 0.0));
 
-  float density = smoothstep(0.34, 0.8, f) * (1.0 - clear);
-  vec3 col = mix(uColA, uColB, smoothstep(0.25, 0.6, f));
-  col = mix(col, uColC, smoothstep(0.58, 0.9, f));
+  // A thick body with denser curling wisps on top, so it reads as smoke and not haze.
+  float body = smoothstep(0.24, 0.58, f);
+  float wisp = smoothstep(0.12, 0.0, abs(f - 0.55)) * smoothstep(0.3, 0.7, length(w));
+  float density = clamp(body * 0.85 + wisp * 0.3, 0.0, 1.0) * (1.0 - clear);
+  vec3 col = mix(uColA, uColB, smoothstep(0.3, 0.55, f));
+  col = mix(col, uColC, max(smoothstep(0.55, 0.8, f), wisp * 0.6));
 
-  // Alpha caps: 0.55 near the hero edges, 0.3 inside, 0.3 over the bottle, 0.15 behind the text.
+  // Alpha caps: 0.8 near the hero edges, 0.6 inside, 0.4 over the bottle, 0.15 behind the text.
   float edge = min(min(px.x, uRes.x - px.x), min(px.y, uRes.y - px.y)) / minDim;
-  float cap = mix(0.3, 0.55, 1.0 - smoothstep(0.0, 0.22, edge));
-  cap = min(cap, mix(1.0, 0.3, rectMask(px, uBottle, 40.0 * uScale)));
-  cap = min(cap, mix(1.0, 0.15, rectMask(px, uText, 40.0 * uScale)));
+  float cap = mix(0.6, 0.8, 1.0 - smoothstep(0.0, 0.22, edge));
+  // The bottle box is mostly transparent margin, so the cap hugs its middle third with a wide soft edge, or its sides show as seams.
+  vec4 glass = uBottle + vec4(1.0, 0.0, -1.0, 0.0) * (uBottle.z - uBottle.x) * 0.3;
+  cap = min(cap, mix(1.0, 0.4, rectMask(px, glass, 120.0 * uScale)));
+  cap = min(cap, mix(1.0, 0.15, rectMask(px, uText, 80.0 * uScale)));
 
   // The button is never covered. Its box already includes 16px padding.
-  float keep = rectMask(px, uKeepA, 24.0 * uScale);
+  float keep = rectMask(px, uKeepA, 64.0 * uScale);
 
-  float a = density * cap * (1.0 - keep);
+  // Half a step of dither: the soft cap ramps change alpha by less than one 8-bit step per pixel, which shows as stripes.
+  float a = max(density * cap + (hash(px) - 0.5) / 255.0, 0.0) * (1.0 - keep);
   outColor = vec4(col * a, a);
 }
 `;

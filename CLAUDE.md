@@ -47,6 +47,7 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 - The logo is delivered as a hand-built SVG, created for the user. Source files: `Saka logo.jpg` and `SakaBG logo.png` in the project root, both raster on pure white and for reference only. Use the SVG everywhere. Never place the raster files on the site.
 - Bottle spin: every bottle (the hero and each perfume) has a transparent `still.webp` and a 36-frame `spin.webp` sprite, made by `scripts/frames.mjs`. The user will supply videos later. Until then use clearly marked placeholders. Cards float and spin once on desktop hover. The modal bottle floats and turns every few seconds.
 - Hero: a floor scene (AI-generated light and dark backdrops, approved by the user) with the bottle standing on the floor, the headline and one VIEW PRODUCTS button on the left. Far less text than the reference.
+- Hero bottle stands on the floor: its shadow is a tight contact shadow right under the base, never a gap below it (owner, 2026-10-22). Floating shadows are for cards and the modal only.
 - Intro sequence: 0 to 1s logo fades in then out. 1 to 3s the bottle fades in at center and spins. 3 to 4.2s it glides down onto the floor while the floor scene dissolves in, then the headline, button and header fade up and the mist breathes in. Skippable, respects reduced motion. Plays once per browser tab (`sessionStorage`), so reloads and returns skip it.
 
 ## Checkout flow (locked)
@@ -90,12 +91,14 @@ The redesign spec `docs/superpowers/specs/2026-10-18-saka-redesign-design.md` (2
 - Vercel hosting. Playwright and axe-core for end-to-end and accessibility checks.
 - Targets on mobile: Lighthouse Performance, Accessibility, Best Practices and SEO at 90 or higher (Accessibility and SEO 95 or higher). LCP under 2.5s, CLS under 0.1, INP under 200ms. Initial JavaScript under 170KB gzipped, excluding the mist chunk. WCAG 2.2 AA. axe-core reports zero serious or critical issues.
 
-## Mist rules (the brand brief lists smoke as off-brand, the client asked for mist)
+## Smoke rules (the brand brief lists smoke as off-brand, the owner asked for it)
 
-- Soft, slow, low-contrast fog using only #F2EBDF, #DCD0BF and #AD9883. Dark mode: #23261C, #3A3A2C, #8C7964 (the mist follows the theme switch).
-- The mist hangs low over the hero floor: a CSS mask fades it out above roughly 65 percent of the hero height.
-- No sparkles, no glow, no new hues, no gradients outside the mist itself.
-- Alpha caps: 0.55 near hero edges, 0.3 over the bottle, 0.15 behind headline text. Buttons are never covered.
+The code still calls it "mist" (`Mist.tsx`, `mist-shader.ts`). On 2026-10-22 the owner asked for smoke instead of mist: thicker, clearly visible, an attraction.
+
+- Slow, curling smoke that rises off the floor. It contrasts with the theme: darker smoke on light (#AD9883, #8C7964, #685846), lighter smoke on dark (#8C7964, #BDAE9B, #DCD0BF). It follows the theme switch.
+- The smoke hangs low over the hero floor: a CSS mask fades it out above roughly 75 percent of the hero height.
+- No sparkles, no glow, no new hues, no gradients outside the smoke itself.
+- Alpha caps: 0.8 near hero edges, 0.6 elsewhere, 0.4 over the bottle glass, 0.15 behind headline text. Buttons are never covered. Keep-outs fade with round corners so dense smoke never shows a box.
 - Reacts to pointer or finger only. Nothing moves on scroll (no parallax). Never blocks vertical scroll.
 - Canvas at 50 percent resolution, device pixel ratio capped at 1.5, 30fps cap on mobile, paused off screen and in hidden tabs. If WebGL2 fails, show a static mist image with no error message.
 

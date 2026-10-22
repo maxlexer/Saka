@@ -6,16 +6,16 @@ import { gsap, useGSAP } from "@/lib/gsap";
 // OGL and the shader stay out of the first load.
 const Mist = lazy(() => import("./Mist"));
 
-/** The mask keeps the fog low over the floor, fading out above roughly 65 percent of the hero height. */
-const MASK = "[mask-image:linear-gradient(to_top,black_30%,transparent_68%)]";
-// The still's caps were baked for the desktop layout. At 55 percent no region passes the 0.3 bottle cap on any layout.
-const STILL = "h-full w-full object-cover opacity-55";
+/** The mask keeps the smoke low over the floor, fading out above roughly 75 percent of the hero height. */
+const MASK = "[mask-image:linear-gradient(to_top,black_35%,transparent_75%)]";
+// The still's caps were baked for the desktop layout. At 75 percent it stays bold on phones, where the bottle sits elsewhere.
+const STILL = "h-full w-full object-cover opacity-75";
 const FADE = { duration: 0.8, ease: "power1.inOut" };
 
 /**
- * The fog starts as a captured frame of the shader, which costs nothing. The live shader only takes over when a
+ * The smoke starts as a captured frame of the shader, which costs nothing. The live shader only takes over when a
  * pointer or finger first comes over the hero, in idle time: creating a WebGL context is a long main-thread task,
- * and the mist only reacts to the pointer anyway. Reduced motion and WebGL failures keep the still.
+ * and the smoke only reacts to the pointer anyway. Reduced motion and WebGL failures keep the still.
  */
 export function MistLayer() {
   const layer = useRef<HTMLDivElement>(null);
@@ -64,8 +64,13 @@ export function MistLayer() {
     <div ref={layer} aria-hidden="true" className={`pointer-events-none absolute inset-0 z-[5] opacity-0 ${MASK}`}>
       {/* Decorative. Lazy, so the other theme's still never downloads. */}
       <div ref={still} className="absolute inset-0">
-        <img src="/mist-static.webp" alt="" loading="lazy" className={`${STILL} dark:hidden`} />
-        <img src="/mist-static-dark.webp" alt="" loading="lazy" className={`${STILL} hidden dark:block`} />
+        {/* Portrait screens get a still baked for the phone layout, or the crop keeps only the thin middle of the wide one. */}
+        {["", "-dark"].map((theme) => (
+          <picture key={theme}>
+            <source media="(orientation: portrait)" srcSet={`/mist-static-tall${theme}.webp`} />
+            <img src={`/mist-static${theme}.webp`} alt="" loading="lazy" className={`${STILL} ${theme ? "hidden dark:block" : "dark:hidden"}`} />
+          </picture>
+        ))}
       </div>
       {live && (
         <div ref={canvas} className="absolute inset-0 opacity-0">

@@ -21,7 +21,7 @@ test.describe("mist", () => {
     await hoverHero(page);
     await expect(page.locator("section canvas")).toHaveCount(1);
     await expect.poll(() => opacity(page.locator("section div:has(> canvas)").locator(".."))).toBe("1");
-    await expect.poll(() => opacity(still.locator(".."))).toBe("0");
+    await expect.poll(() => opacity(still.locator("../.."))).toBe("0");
   });
 
   test("the canvas is decorative, never takes input, sits under the button and is masked low", async ({ page }) => {

@@ -1,7 +1,7 @@
 export type Box = [number, number, number, number];
 
-export const MIST_COLORS = ["#F2EBDF", "#DCD0BF", "#AD9883"] as const;
-export const MIST_COLORS_DARK = ["#23261C", "#3A3A2C", "#8C7964"] as const;
+export const MIST_COLORS = ["#AD9883", "#8C7964", "#685846"] as const;
+export const MIST_COLORS_DARK = ["#8C7964", "#BDAE9B", "#DCD0BF"] as const;
 
 /** Shader time of the captured still. The live mist starts its clock here, so swapping the still for the canvas does not jump. */
 export const MIST_STILL_TIME = 40;

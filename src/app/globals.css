@@ -18,6 +18,7 @@
   --badge: #ad9883;
   --ink: #171a12;
   --contact: rgba(23, 26, 18, 0.18);
+  --ground: rgba(23, 26, 18, 0.5);
   color-scheme: light;
 }
 
@@ -35,6 +36,7 @@
   --btn: #f5efe4;
   --btn-text: #171a12;
   --contact: rgba(23, 26, 18, 0.6);
+  --ground: rgba(23, 26, 18, 0.95);
   color-scheme: dark;
 }
 

@@ -41,7 +41,7 @@ export function Intro({ logo }: { logo: ReactNode }) {
         {logo}
       </div>
       <div ref={stage} aria-hidden="true" className="absolute opacity-0">
-        <SpinBottle ref={bottle} dir="/hero" alt="" className="h-full" />
+        <SpinBottle ref={bottle} dir="/hero" alt="" grounded className="h-full" />
       </div>
       <button ref={skip} type="button" aria-label="Skip intro" className="absolute inset-x-0 bottom-8 mx-auto min-h-11 w-fit px-4 font-display text-[13px] font-medium text-muted opacity-0">
         Skip

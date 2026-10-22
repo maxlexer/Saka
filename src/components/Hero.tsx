@@ -33,7 +33,7 @@ export function Hero() {
             transparent margin of its own image. On desktop the box spans 32 to 100 percent, so it stands at 66 percent. */}
         <div className="relative z-[1] my-4 flex min-h-0 w-full flex-1 justify-center lg:absolute lg:bottom-[1%] lg:left-[32%] lg:right-0 lg:my-0 lg:h-[96%] lg:w-auto lg:flex-none">
           <div data-hero-bottle className="absolute bottom-0 aspect-[4/5] h-[112%] lg:h-full">
-            <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority skeleton={false} className="h-full" />
+            <SpinBottle dir="/hero" alt="A SAKA Parfum bottle standing on a stone floor" priority skeleton={false} grounded className="h-full" />
           </div>
         </div>
 

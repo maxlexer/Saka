@@ -7,7 +7,6 @@ export type OrderRow = {
   id: string;
   status: "pending" | "paid";
   order_number: number | null;
-  claim_token: string;
   customer_name: string | null;
   telegram: string | null;
   fulfilment: "pickup" | "delivery";
@@ -43,13 +42,12 @@ function ok<T>({ data, error }: { data: T; error: { message: string } | null }):
   return data;
 }
 
-async function getBy(column: "id" | "khqr_md5" | "claim_token", value: string) {
+async function getBy(column: "id" | "khqr_md5", value: string) {
   return ok(await db().from("orders").select().eq(column, value).maybeSingle()) as OrderRow | null;
 }
 
 export const getOrder = (id: string) => getBy("id", id);
 export const getOrderByMd5 = (md5: string) => getBy("khqr_md5", md5);
-export const getOrderByClaimToken = (token: string) => getBy("claim_token", token);
 
 export async function insertOrder(order: NewOrder) {
   return ok(await db().from("orders").insert(order).select().single()) as OrderRow;
@@ -159,4 +157,17 @@ export async function paidOrders(page: number, perPage: number) {
 
 export async function paidSince(sinceIso: string) {
   return ok(await db().from("orders").select("total_usd, paid_at").eq("status", "paid").gte("paid_at", sinceIso)) as Pick<OrderRow, "total_usd" | "paid_at">[];
+}
+
+type PaidTotal = Pick<OrderRow, "total_usd" | "paid_at" | "items">;
+
+/** Every paid order's totals, paged because PostgREST caps one response at 1000 rows. */
+export async function paidTotals() {
+  const PAGE = 1000;
+  const all: PaidTotal[] = [];
+  for (let from = 0; ; from += PAGE) {
+    const rows = ok(await db().from("orders").select("total_usd, paid_at, items").eq("status", "paid").order("order_number").range(from, from + PAGE - 1)) as PaidTotal[];
+    all.push(...rows);
+    if (rows.length < PAGE) return all;
+  }
 }

@@ -62,17 +62,17 @@ export function Finder({ products }: { products: Product[] }) {
 
   return (
     <div className="wrap text-center">
-      <p className="eyebrow">Scent finder</p>
-      <h2 id="finder-title" className="h2 mt-3">Tell us how you want to feel</h2>
+      <h2 id="finder-title" className="h2">Tell us how you want to feel</h2>
 
-      <div role="group" aria-label="Choose by" className="mt-10 flex justify-center gap-6 sm:gap-8">
+      {/* Segments like the size selector in the product modal, so the three questions read as a choice. */}
+      <div role="group" aria-label="Choose by" className="mx-auto mt-10 flex max-w-md gap-2">
         {GROUPS.map(({ key, title }, i) => (
           <button
             key={key}
             type="button"
             aria-pressed={tab === i}
             onClick={() => setTab(i)}
-            className="link tap label text-muted transition-colors duration-300 aria-pressed:text-text"
+            className="label flex min-h-11 flex-auto items-center justify-center whitespace-nowrap rounded-sm border border-border px-2 tracking-[0.06em] sm:tracking-[0.1em] transition-colors duration-300 hover:border-secondary aria-pressed:border-btn aria-pressed:bg-btn aria-pressed:text-btn-text"
           >
             {title}
             {sel[key].length > 0 && <span className="badge ml-2 inline-grid tracking-normal">{sel[key].length}</span>}
@@ -93,30 +93,32 @@ export function Finder({ products }: { products: Product[] }) {
         ))}
       </div>
 
-      <div className="mt-10 flex flex-col items-center gap-2">
+      {/* One row of constant height: the count and Clear all share it, so nothing shifts and no blank band is reserved. */}
+      <div className="mt-8 flex min-h-11 flex-wrap items-center justify-center gap-x-6">
         <p ref={status} role="status" aria-live="polite" aria-atomic="true" className="text-muted">
           {empty
-            ? "Choose what feels right. We will show what is in store."
+            ? "Choose what feels right."
             : matches.length > 0
               ? `${matches.length} ${matches.length === 1 ? "scent matches" : "scents match"}`
               : "Nothing matches all of that. Try removing one choice."}
         </p>
-        {/* Kept in the layout while hidden, so the line above never shifts. */}
-        <button
-          type="button"
-          onClick={() => {
-            change(EMPTY_SELECTION);
-            // This button hides itself, so focus moves to the first chip instead of falling to the page.
-            chips.current?.querySelector("button")?.focus();
-          }}
-          className={`link tap label ${empty ? "invisible" : ""}`}
-        >
-          Clear all
-        </button>
+        {!empty && (
+          <button
+            type="button"
+            onClick={() => {
+              change(EMPTY_SELECTION);
+              // This button goes away, so focus moves to the first chip instead of falling to the page.
+              chips.current?.querySelector("button")?.focus();
+            }}
+            className="link tap label"
+          >
+            Clear all
+          </button>
+        )}
       </div>
 
       <div ref={results}>
-        {matches.length > 0 && <ProductGrid products={matches} className={`mt-10 ${GRID}`} />}
+        {matches.length > 0 && <ProductGrid products={matches} className={`mt-8 ${GRID}`} />}
         {close.length > 0 && (
           <>
             <h3 className="h3 mt-12">Close matches</h3>

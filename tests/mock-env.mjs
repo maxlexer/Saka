@@ -8,7 +8,6 @@ export const mockEnv = () => ({
   KHQR_TOKEN: "test-khqr-token",
   TELEGRAM_API_BASE: MOCK,
   TELEGRAM_BOT_TOKEN: "123:test",
-  TELEGRAM_BOT_USERNAME: "saka_test_bot",
   TELEGRAM_ADMIN_CHAT_ID: "-1001",
   TELEGRAM_WEBHOOK_SECRET: "test-tg-secret",
   CRON_SECRET: "test-cron-secret",

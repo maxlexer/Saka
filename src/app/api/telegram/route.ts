@@ -1,6 +1,6 @@
-import { handleStart } from "@/lib/orders";
+import { handleRevenue } from "@/lib/orders";
 
-const START = /^\/start(?:@\w+)?(?:\s+(\S+))?/;
+const REVENUE = /^\/revenue(?:@\w+)?(?:\s|$)/;
 
 export async function POST(request: Request) {
   const secret = process.env.TELEGRAM_WEBHOOK_SECRET;
@@ -11,8 +11,10 @@ export async function POST(request: Request) {
     const update = await request.json();
     const text: unknown = update?.message?.text;
     const chatId: unknown = update?.message?.chat?.id;
-    const match = typeof text === "string" ? START.exec(text) : null;
-    if (match && typeof chatId === "number") await handleStart(chatId, match[1]);
+    // Only the admin group may ask. Anyone else who finds the bot gets no reply and no numbers.
+    if (typeof text === "string" && REVENUE.test(text) && typeof chatId === "number" && String(chatId) === process.env.TELEGRAM_ADMIN_CHAT_ID) {
+      await handleRevenue(chatId);
+    }
   } catch (error) {
     console.error("Telegram update failed", error);
   }

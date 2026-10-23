@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { escapeHtml, formatAdminMessage, formatConfirmation, sendMessage } from "@/lib/telegram";
+import { escapeHtml, formatAdminMessage, formatRevenue, sendMessage } from "@/lib/telegram";
 
 const order = {
   order_number: 1042,
@@ -56,11 +56,47 @@ describe("formatAdminMessage", () => {
   });
 });
 
-describe("formatConfirmation", () => {
-  it("greets by first name with order number, total and fulfilment", () => {
-    expect(formatConfirmation(order)).toBe(
-      "Thank you, Sokha. Order SK-1042 is confirmed. Total $80.00, delivery. Paid 2026-10-18 14:32 (Phnom Penh). We will message you when it is ready.",
+describe("formatRevenue", () => {
+  const now = new Date("2026-10-23T08:00:00Z"); // 15:00 in Phnom Penh
+  const sale = (paid_at: string, total_usd: number, ...qty: number[]) => ({ paid_at, total_usd, items: qty.map((q) => ({ qty: q })) });
+
+  it("counts orders, bottles and revenue for today, this month and all time", () => {
+    const text = formatRevenue(
+      [
+        sale("2026-10-23T02:00:00Z", 24, 2), // today
+        sale("2026-10-10T05:00:00Z", 46, 1, 2), // earlier this month
+        sale("2026-09-30T16:59:00Z", 12, 1), // 23:59 on 30 Sept in Phnom Penh, last month
+        sale("2026-09-30T17:00:00Z", 10, 1), // 00:00 on 1 Oct in Phnom Penh, this month
+      ],
+      now,
     );
+    expect(text).toBe(
+      [
+        "Sales report",
+        "As of 2026-10-23 15:00 (Phnom Penh)",
+        "",
+        "<b>Today</b>",
+        "Orders: 1",
+        "Bottles: 2",
+        "Revenue: $24.00",
+        "",
+        "<b>This month</b>",
+        "Orders: 3",
+        "Bottles: 6",
+        "Revenue: $80.00",
+        "",
+        "<b>All time</b>",
+        "Orders: 4",
+        "Bottles: 7",
+        "Revenue: $92.00",
+      ].join("\n"),
+    );
+  });
+  it("shows zeros before the first sale", () => {
+    expect(formatRevenue([], now)).toContain("Orders: 0\nBottles: 0\nRevenue: $0.00");
+  });
+  it("never contains an exclamation mark or an em dash", () => {
+    expect(formatRevenue([sale("2026-10-23T02:00:00Z", 24, 2)], now)).not.toMatch(new RegExp(`[!${String.fromCharCode(0x2014)}]`));
   });
 });
 

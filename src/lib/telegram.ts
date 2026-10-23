@@ -1,5 +1,5 @@
 import type { OrderRow } from "./supabase";
-import { phnomPenhTime } from "./time";
+import { phnomPenhStart, phnomPenhTime } from "./time";
 
 type Receipt = Pick<OrderRow, "order_number" | "paid_at" | "customer_name" | "telegram" | "fulfilment" | "map_url" | "items" | "delivery_fee_usd" | "total_usd">;
 
@@ -26,9 +26,27 @@ export function formatAdminMessage(o: Receipt) {
   ].join("\n");
 }
 
-export function formatConfirmation(o: Receipt) {
-  const first = escapeHtml((o.customer_name ?? "").split(" ")[0]);
-  return `Thank you, ${first}. Order ${orderNumber(o.order_number)} is confirmed. Total ${usd(o.total_usd)}, ${o.fulfilment}. Paid ${phnomPenhTime(o.paid_at)} (Phnom Penh). We will message you when it is ready.`;
+type Sale = { total_usd: number; paid_at: string | null; items: { qty: number }[] };
+
+/** Orders, bottles and revenue for today, this month and all time (Phnom Penh days). Revenue includes delivery fees. */
+export function formatRevenue(sales: Sale[], now: Date) {
+  const day = phnomPenhStart("day", now).getTime();
+  const month = phnomPenhStart("month", now).getTime();
+  const periods = [
+    { label: "Today", since: day },
+    { label: "This month", since: month },
+    { label: "All time", since: 0 },
+  ];
+  return [
+    "Sales report",
+    `As of ${phnomPenhTime(now.toISOString())} (Phnom Penh)`,
+    ...periods.flatMap(({ label, since }) => {
+      const list = sales.filter((s) => s.paid_at && Date.parse(s.paid_at) >= since);
+      const cents = list.reduce((sum, s) => sum + Math.round(Number(s.total_usd) * 100), 0);
+      const bottles = list.reduce((sum, s) => sum + s.items.reduce((n, i) => n + i.qty, 0), 0);
+      return ["", `<b>${label}</b>`, `Orders: ${list.length}`, `Bottles: ${bottles}`, `Revenue: ${usd(cents / 100)}`];
+    }),
+  ].join("\n");
 }
 
 export async function sendMessage(chatId: number | string, text: string) {

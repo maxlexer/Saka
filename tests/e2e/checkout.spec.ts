@@ -6,7 +6,7 @@ test.skip(({ isMobile }) => isMobile, "Payment flows run once, on desktop");
 test.skip(!process.env.SUPABASE_URL, "Needs a Supabase database in .env.test, see README");
 test.beforeEach(resetAll);
 
-test("pickup: pay, see the order number, admin gets one message, customer confirms on Telegram", async ({ page, request }) => {
+test("pickup: pay, see the order number, admin gets one message, customer can join the group", async ({ page, request }) => {
   await reachPayment(page, "pickup");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Pay $12.00");
   await payAndTrigger(page);
@@ -20,19 +20,27 @@ test("pickup: pay, see the order number, admin gets one message, customer confir
 
   await expect(page.getByRole("heading", { name: "Pick up in the shop" })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
-  const href = (await page.getByRole("link", { name: "Open Telegram" }).getAttribute("href")) ?? "";
-  expect(href).toMatch(/^https:\/\/t\.me\/saka_test_bot\?start=[\w-]{24}$/);
+  await expect(page.getByRole("link", { name: "Join the group" })).toHaveAttribute("href", /^https:\/\/t\.me\//);
 
   await page.goto("/checkout");
   await expect(page.getByText("Your cart is empty.")).toBeVisible();
+});
 
-  const token = href.split("start=")[1];
-  await request.post("/api/telegram", {
-    headers: { "x-telegram-bot-api-secret-token": "test-tg-secret" },
-    data: { message: { text: `/start ${token}`, chat: { id: 4242 } } },
-  });
-  const reply = (await mock.messages()).find((m) => m.chat_id === 4242);
-  expect(reply?.text).toMatch(/Thank you, Sokha\. Order SK-\d+ is confirmed\. Total \$12\.00, pickup\./);
+test("/revenue answers in the admin group only, with orders, bottles and revenue", async ({ page, request }) => {
+  await reachPayment(page, "pickup");
+  await payAndTrigger(page);
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-\d+/);
+
+  const ask = (chatId: number, text = "/revenue") =>
+    request.post("/api/telegram", { headers: { "x-telegram-bot-api-secret-token": "test-tg-secret" }, data: { message: { text, chat: { id: chatId } } } });
+  await ask(-1001);
+  await ask(4242);
+  const replies = (await mock.messages()).filter((m) => typeof m.chat_id === "number");
+  expect(replies).toHaveLength(1);
+  expect(replies[0].chat_id).toBe(-1001);
+  expect(replies[0].text).toContain("Orders: 1");
+  expect(replies[0].text).toContain("Bottles: 1");
+  expect(replies[0].text).toContain("Revenue: $12.00");
 });
 
 test("delivery: needs a Google Maps link, adds $2.00 and sends the map to admin", async ({ page }) => {
@@ -73,7 +81,7 @@ test("resume: leaving and returning, or reloading, restores the payment screen a
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-/);
   await page.reload();
   await expect(page.getByRole("heading", { level: 1 })).toContainText(/Order SK-/);
-  await expect(page.getByRole("heading", { name: "Confirmation on Telegram" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Join our Telegram group" })).toBeVisible();
 });
 
 test("polling alone settles an order when the webhook never arrives", async ({ page }) => {
@@ -137,6 +145,6 @@ test("axe finds no serious issues on the payment screen or the paid confirmation
   await reachPayment(page, "pickup");
   expect(await seriousIssues(page)).toEqual([]);
   await payAndTrigger(page);
-  await expect(page.getByRole("heading", { name: "Confirmation on Telegram" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Join our Telegram group" })).toBeVisible();
   expect(await seriousIssues(page)).toEqual([]);
 });

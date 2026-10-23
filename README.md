@@ -1,6 +1,6 @@
 # SAKA Parfum
 
-Storefront for SAKA Parfum, a perfume shop in Cambodia. Next.js App Router, Supabase for the catalog and orders, KHQR payments through khqr.dev, and a Telegram bot for order messages.
+Storefront for SAKA Parfum, a perfume shop in Cambodia. Next.js App Router, Supabase for the catalog and orders, KHQR payments through khqr.dev, and a Telegram bot for order messages and sales totals.
 
 Project rules live in `CLAUDE.md`. The design spec is in `docs/superpowers/specs/`.
 
@@ -65,9 +65,9 @@ For local development without a hosted project, `npx supabase start` runs a loca
 
 The perfume list comes from `supabase/seed/catalog.json`. To change it, edit that file, run `npm run seed:sql` to regenerate the seed migration, and write a new migration for any rows that already exist (the seed only inserts missing perfumes).
 
-## 4. Telegram (admin messages and customer confirmations)
+## 4. Telegram (admin messages and /revenue)
 
-1. In Telegram, message @BotFather, send `/newbot`, and follow the steps. Put the token in `TELEGRAM_BOT_TOKEN` and the bot username (without @) in `TELEGRAM_BOT_USERNAME`.
+1. In Telegram, message @BotFather, send `/newbot`, and follow the steps. Put the token in `TELEGRAM_BOT_TOKEN`.
 2. Create the admin group, add the bot, and send any message in the group.
 3. Open `https://api.telegram.org/bot<token>/getUpdates` in a browser. Find `"chat":{"id":-100...` for the group and put that negative number in `TELEGRAM_ADMIN_CHAT_ID`.
 4. Choose `TELEGRAM_WEBHOOK_SECRET`: letters, digits, underscore and hyphen only.
@@ -77,7 +77,18 @@ The perfume list comes from `supabase/seed/catalog.json`. To change it, edit tha
 curl "https://api.telegram.org/bot<token>/setWebhook" -d "url=https://<site>/api/telegram" -d "secret_token=<TELEGRAM_WEBHOOK_SECRET>"
 ```
 
-Every paid order posts one message to the admin group with the name, Telegram number, fulfilment, items, total and, for delivery, the Google Maps link. A customer gets a confirmation only if they tap the Telegram button after paying. The bot replies once to that chat and stores nothing.
+6. Optional: add `/revenue` to the command menu in the group.
+
+```bash
+curl "https://api.telegram.org/bot<token>/setMyCommands" -H "content-type: application/json" -d '{"commands":[{"command":"revenue","description":"Orders, bottles and revenue"}],"scope":{"type":"all_chat_administrators"}}'
+```
+
+The bot does two things, both in the admin group:
+
+- Every paid order posts one message with the name, Telegram number, fulfilment, items, total and, for delivery, the Google Maps link.
+- `/revenue` replies with orders, bottles and revenue for today, this month and all time (Phnom Penh days). Revenue is the paid total including delivery fees. It is counted from the `orders` table, so it keeps working after personal details are cleared. The bot ignores `/revenue` from any other chat.
+
+The paid page links customers to a Telegram group. The link is a placeholder: set `telegramGroupUrl` in `src/lib/store.ts` once the group exists.
 
 ## 5. khqr.dev (KHQR payments)
 
@@ -100,7 +111,7 @@ The cron in `vercel.json` runs `/api/cron/daily` once a day at 03:00 UTC (10:00 
 
 1. Place one real order for the cheapest item and pay it with a Bakong banking app.
 2. Confirm the admin group gets exactly one message with the right items and total.
-3. On a phone, tap "Open Telegram" on the paid screen, press Start, and confirm the bot replies with the order number.
+3. Send `/revenue` in the admin group and confirm the counts match.
 4. Try one delivery order and confirm the Google Maps link appears in the admin message.
 
 ## 8. Operations

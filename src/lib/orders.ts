@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import { checkPaid, generateDeeplink, generateQr } from "./khqr";
 import { getCatalog } from "./catalog";
 import { hashIp } from "./ip";
@@ -6,7 +5,7 @@ import { computeTotals } from "./pricing";
 import type { OrderInput } from "./schemas";
 import * as db from "./supabase";
 import type { OrderItem, OrderRow } from "./supabase";
-import { formatAdminMessage, formatConfirmation, orderNumber, sendMessage } from "./telegram";
+import { formatAdminMessage, formatRevenue, orderNumber, sendMessage } from "./telegram";
 
 const QR_LIFETIME_MS = 10 * 60_000;
 const CHECK_INTERVAL_MS = 5000;
@@ -25,7 +24,7 @@ export type OrderLine = Pick<OrderItem, "name" | "sizeMl" | "qty" | "priceUsd">;
 export type OrderView =
   | { state: "pending"; qr: string; deeplink: string | null; totalUsd: number; expiresAt: string; fulfilment: "pickup" | "delivery"; items: OrderLine[] }
   | { state: "expired"; totalUsd: number }
-  | { state: "paid"; orderNumber: string; totalUsd: number; fulfilment: "pickup" | "delivery"; claimToken: string };
+  | { state: "paid"; orderNumber: string; totalUsd: number; fulfilment: "pickup" | "delivery" };
 
 export async function createOrder({ lines, details }: OrderInput, ip: string) {
   const ipHash = hashIp(ip);
@@ -49,7 +48,6 @@ export async function createOrder({ lines, details }: OrderInput, ip: string) {
   const expiresAt = new Date(Date.now() + QR_LIFETIME_MS).toISOString();
   const qr = await generateQr(totalUsd);
   const order = await db.insertOrder({
-    claim_token: randomBytes(18).toString("base64url"),
     customer_name: details.name,
     telegram: details.telegram,
     fulfilment: details.fulfilment,
@@ -113,22 +111,16 @@ export async function getOrderView(id: string): Promise<OrderView | null> {
 
   const totalUsd = Number(order.total_usd);
   if (order.status === "paid") {
-    return { state: "paid", orderNumber: orderNumber(order.order_number), totalUsd, fulfilment: order.fulfilment, claimToken: order.claim_token };
+    return { state: "paid", orderNumber: orderNumber(order.order_number), totalUsd, fulfilment: order.fulfilment };
   }
   if (Date.parse(order.expires_at) <= Date.now()) return { state: "expired", totalUsd };
   const items = order.items.map(({ name, sizeMl, qty, priceUsd }) => ({ name, sizeMl, qty, priceUsd }));
   return { state: "pending", qr: order.khqr_qr, deeplink: order.khqr_deeplink, totalUsd, expiresAt: order.expires_at, fulfilment: order.fulfilment, items };
 }
 
-/** Replies once to the chat that pressed Start. The chat id is never stored. */
-export async function handleStart(chatId: number, token: string | undefined) {
-  const order = token ? await db.getOrderByClaimToken(token) : null;
-  const text = !order
-    ? "Hello from SAKA Parfum. Pay on our site, then tap the Telegram button to get your confirmation here."
-    : order.status === "paid"
-      ? formatConfirmation(order)
-      : "We have not received this payment yet. Please try again in a moment.";
-  await sendMessage(chatId, text);
+/** Answers /revenue in the admin group with sales so far today, this month and overall. */
+export async function handleRevenue(chatId: number) {
+  await sendMessage(chatId, formatRevenue(await db.paidTotals(), new Date()));
 }
 
 export async function runDaily() {

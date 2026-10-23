@@ -7,6 +7,8 @@ export const STORE = {
   hours: [{ days: "Wednesday to Monday", open: "12:45", close: "19:00" }],
   phone: "+855 12 000 000",
   mapUrl: "https://maps.app.goo.gl/sample",
+  /** Placeholder invite link until the owner creates the customer group. */
+  telegramGroupUrl: "https://t.me/sakaparfum",
   socialLinks: [{ label: "Instagram", url: "https://instagram.com/sakaparfum" }],
 };
 

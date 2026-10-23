@@ -11,7 +11,7 @@ import { JsonLd } from "@/components/JsonLd";
 import { ProductGrid } from "@/components/ProductGrid";
 import { ScentModal } from "@/components/ScentModal";
 import { VisitUs } from "@/components/VisitUs";
-import { getCatalog, previewPicks } from "@/lib/catalog";
+import { bestSellers, getCatalog } from "@/lib/catalog";
 import { localBusiness, SITE_URL } from "@/lib/jsonld";
 import { STORE } from "@/lib/store";
 
@@ -27,13 +27,13 @@ export default async function HomePage() {
       <Hero />
       <section id="collection" aria-labelledby="collection-title" className="section">
         <FadeUp className="wrap text-center">
-          <h2 id="collection-title" className="h2">On our shelves today</h2>
+          <h2 id="collection-title" className="h2">Best sellers</h2>
           {products.length === 0 ? (
             <EmptyShelf />
           ) : (
             <>
               <p className="mt-4 text-muted">Visit us to try any scent.</p>
-              <ProductGrid products={previewPicks(products, 6)} className="mt-10 lg:[&>li:nth-child(n+4)]:hidden" />
+              <ProductGrid products={bestSellers(products)} columns="grid-cols-3" className="mt-10 max-sm:gap-2 max-sm:[&_.card-title]:text-xs max-sm:[&_.eyebrow]:tracking-[0.08em] max-sm:[&_a]:p-2" />
               <Link href="/products" className="link tap mt-10 inline-flex items-center gap-2 label">
                 View products <ArrowIcon width={18} height={18} />
               </Link>

@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 
-const PROMPT = "Choose what feels right. We will show what is in store.";
+const PROMPT = "Choose what feels right.";
 const tab = (page: Page, group: string) => page.locator("#finder").getByRole("group", { name: "Choose by" }).getByRole("button", { name: group });
 const chip = (page: Page, group: string, name: string) =>
   page.locator("#finder").getByRole("group", { name: group, exact: true }).getByRole("button", { name, exact: true });
@@ -78,6 +78,17 @@ test("clear all hands focus to the first chip instead of dropping it", async ({ 
   await clear.focus();
   await page.keyboard.press("Enter");
   await expect(chip(page, "Vibe", "Calm")).toBeFocused();
+});
+
+test("the finder keeps one row for the count, with Clear all only once something is chosen", async ({ page }) => {
+  await page.goto("/?x=1");
+  const finder = page.locator("#finder");
+  const row = finder.getByRole("status").locator("..");
+  await expect(finder.getByRole("button", { name: "Clear all" })).toHaveCount(0);
+  const empty = await row.boundingBox();
+  await pick(page, "Vibe", "Calm");
+  await expect(finder.getByRole("button", { name: "Clear all" })).toBeVisible();
+  expect((await row.boundingBox())?.height).toBe(empty?.height);
 });
 
 test("other query parameters survive a chip change", async ({ page }) => {

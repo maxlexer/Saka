@@ -135,7 +135,7 @@ function Line({ label, value, strong = false }: { label: ReactNode; value: React
 }
 
 /** The same slip as the payment, with the code swapped for a check that draws itself. The rest rises in order. */
-function Paid({ view, botUsername }: { view: Extract<OrderView, { state: "paid" }>; botUsername: string }) {
+function Paid({ view }: { view: Extract<OrderView, { state: "paid" }> }) {
   const root = useRef<HTMLDivElement>(null);
   const pickup = view.fulfilment === "pickup";
 
@@ -190,10 +190,10 @@ function Paid({ view, botUsername }: { view: Extract<OrderView, { state: "paid" 
         </div>
 
         <div data-rise className="mt-8 rounded-card border border-border bg-surface p-6 text-left">
-          <h2 className="h3">Confirmation on Telegram</h2>
-          <p className="small mt-2 text-muted">Optional. Our bot sends your order number and total in one message.</p>
-          <a href={`https://t.me/${botUsername}?start=${view.claimToken}`} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-5 w-full sm:w-auto">
-            Open Telegram
+          <h2 className="h3">Join our Telegram group</h2>
+          <p className="small mt-2 text-muted">New scents and shop news, in one quiet place.</p>
+          <a href={STORE.telegramGroupUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary mt-5 w-full sm:w-auto">
+            Join the group
           </a>
         </div>
 
@@ -203,7 +203,7 @@ function Paid({ view, botUsername }: { view: Extract<OrderView, { state: "paid" 
   );
 }
 
-export function PaymentScreen({ orderId, botUsername }: { orderId: string; botUsername: string }) {
+export function PaymentScreen({ orderId }: { orderId: string }) {
   const router = useRouter();
   const { lines } = useCart();
   const activeOrder = useActiveOrder();
@@ -263,7 +263,7 @@ export function PaymentScreen({ orderId, botUsername }: { orderId: string; botUs
     );
   }
 
-  if (view.state === "paid") return <Paid view={view} botUsername={botUsername} />;
+  if (view.state === "paid") return <Paid view={view} />;
 
   return (
     <Frame>

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { parseCatalog, previewPicks, toCartCatalog } from "@/lib/catalog";
+import { bestSellers, parseCatalog, toCartCatalog } from "@/lib/catalog";
 
 const row = {
   slug: "cool-water", name: "Davidoff Cool Water", family: "fresh", description: "Crisp.",
@@ -39,14 +39,18 @@ describe("toCartCatalog", () => {
   });
 });
 
-describe("previewPicks", () => {
-  const p = (id: string, family: string, available = true) => ({ id, family, available }) as never;
-  const shelf = [p("f1", "fresh"), p("f2", "fresh"), p("w1", "woody"), p("w2", "woody", false), p("w3", "woody"), p("o1", "oriental"), p("a1", "aromatic")];
-  it("takes one per family in turn, skipping out of stock", () => {
-    expect(previewPicks(shelf, 6).map((x: { id: string }) => x.id)).toEqual(["f1", "w1", "o1", "a1", "f2", "w3"]);
+describe("bestSellers", () => {
+  const p = (id: string, available = true) => ({ id, available }) as never;
+  const ids = (list: { id: string }[]) => list.map((x) => x.id);
+  const shelf = [p("cool-water"), p("aventus"), p("sauvage-edt"), p("acqua-di-gio-profondo"), p("layton")];
+  it("shows the best sellers in their set order", () => {
+    expect(ids(bestSellers(shelf))).toEqual(["acqua-di-gio-profondo", "sauvage-edt", "aventus"]);
   });
-  it("stops at the count and copes with a short shelf", () => {
-    expect(previewPicks(shelf, 3).map((x: { id: string }) => x.id)).toEqual(["f1", "w1", "o1"]);
-    expect(previewPicks([p("o1", "oriental")], 6).map((x: { id: string }) => x.id)).toEqual(["o1"]);
+  it("replaces a sold out best seller from the shelf in order, so there are still three", () => {
+    const sold = [p("cool-water"), p("aventus", false), p("sauvage-edt"), p("acqua-di-gio-profondo"), p("layton")];
+    expect(ids(bestSellers(sold))).toEqual(["acqua-di-gio-profondo", "sauvage-edt", "cool-water"]);
+  });
+  it("copes with a short shelf", () => {
+    expect(ids(bestSellers([p("layton")]))).toEqual(["layton"]);
   });
 });

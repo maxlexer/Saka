@@ -66,12 +66,12 @@ export const toCartCatalog = ({ products, prices }: Catalog): CartCatalog => ({
   prices,
 });
 
-/** Round robin across families in shelf order, so the home preview shows the whole range. */
-export function previewPicks(products: Product[], count: number) {
-  const groups = SCENT_FAMILIES.map((family) => products.filter((p) => p.family === family && p.available));
-  const picks: Product[] = [];
-  for (let i = 0; picks.length < count && groups.some((g) => i < g.length); i++) {
-    for (const group of groups) if (group[i] && picks.length < count) picks.push(group[i]);
-  }
-  return picks;
+/** The home shelf, in order. Change this list to change what the shelf shows. */
+export const BEST_SELLERS = ["acqua-di-gio-profondo", "sauvage-edt", "aventus"];
+
+/** Best sellers that are in stock, topped up from the shelf in order if one is missing or sold out. */
+export function bestSellers(products: Product[], count = 3) {
+  const shelf = products.filter((p) => p.available);
+  const named = BEST_SELLERS.flatMap((id) => shelf.filter((p) => p.id === id));
+  return [...named, ...shelf.filter((p) => !named.includes(p))].slice(0, count);
 }

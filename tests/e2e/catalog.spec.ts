@@ -1,11 +1,13 @@
 import { expect, test } from "@playwright/test";
 import { addFirstProduct, FIRST } from "./helpers";
 
-test("home shows the hero and the right number of preview cards, with no sizes or prices", async ({ page }, info) => {
+test("home shows the hero and three best sellers on every screen, with no sizes or prices", async ({ page }) => {
   await page.goto("/?x=1");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Find the scent that feels like you.");
-  const expected = info.project.name === "desktop" ? 3 : 6;
-  await expect(page.locator("#collection li:visible")).toHaveCount(expected);
+  await expect(page.getByRole("heading", { level: 2, name: "Best sellers" })).toBeVisible();
+  await expect(page.locator("#collection li:visible")).toHaveCount(3);
+  const tops = await page.locator("#collection li").evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1); // one row, at any width
   await expect(page.locator("#collection").getByRole("link", { name: /view products/i })).toBeVisible();
   expect(await page.locator("main").innerText()).not.toMatch(/\$|\d\s?ml|out of stock/i);
 });
